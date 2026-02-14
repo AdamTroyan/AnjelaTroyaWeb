@@ -114,49 +114,53 @@ async function verifyJwt(token: string, secret: string): Promise<JwtPayload | nu
 }
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const isApiRoute = pathname.startsWith("/api/");
+  try {
+    const { pathname } = request.nextUrl;
+    const isApiRoute = pathname.startsWith("/api/");
 
-  if (
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/uploads/") ||
-    pathname === "/favicon.ico"
-  ) {
-    return NextResponse.next();
-  }
-
-  if (PUBLIC_PATHS.has(pathname)) {
-    return NextResponse.next();
-  }
-
-  const secret = process.env.AUTH_SECRET;
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-  const payload = token && secret ? await verifyJwt(token, secret) : null;
-
-  if (!payload) {
-    if (isApiRoute) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (
+      pathname.startsWith("/_next/") ||
+      pathname.startsWith("/uploads/") ||
+      pathname === "/favicon.ico"
+    ) {
+      return NextResponse.next();
     }
+
+    if (PUBLIC_PATHS.has(pathname)) {
+      return NextResponse.next();
+    }
+
+    const secret = process.env.AUTH_SECRET;
+    const token = request.cookies.get(COOKIE_NAME)?.value;
+    const payload = token && secret ? await verifyJwt(token, secret) : null;
+
+    if (!payload) {
+      if (isApiRoute) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    const nonce = crypto.randomUUID().replace(/-/g, "");
+    const isProd = process.env.NODE_ENV === "production";
+    const csp = buildCsp(nonce, isProd);
+
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-nonce", nonce);
+
+    const response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+
+    response.headers.set("Content-Security-Policy", csp);
+    response.headers.set("x-nonce", nonce);
+
+    return response;
+  } catch {
     return NextResponse.redirect(new URL("/login", request.url));
   }
-
-  const nonce = crypto.randomUUID().replace(/-/g, "");
-  const isProd = process.env.NODE_ENV === "production";
-  const csp = buildCsp(nonce, isProd);
-
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-nonce", nonce);
-
-  const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
-
-  response.headers.set("Content-Security-Policy", csp);
-  response.headers.set("x-nonce", nonce);
-
-  return response;
 }
 
 export const config = {
