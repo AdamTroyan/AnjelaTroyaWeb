@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import ActionForm from "@/components/ActionForm";
 
 type PropertyDetailsItem = {
   label: string;
@@ -227,7 +228,7 @@ export default function CreatePropertyForm({ action }: CreatePropertyFormProps) 
 
   return (
     <>
-      <form
+      <ActionForm
         className="mt-6 grid gap-4"
         action={action}
         onChange={() => setIsDirty(true)}
@@ -335,7 +336,7 @@ export default function CreatePropertyForm({ action }: CreatePropertyFormProps) 
         >
           הוספת נכס
         </button>
-      </form>
+      </ActionForm>
 
       {isOpen ? (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-6">

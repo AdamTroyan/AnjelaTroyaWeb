@@ -13,6 +13,7 @@ import {
 } from "./actions";
 import ConfirmActionButton from "./ConfirmActionButton";
 import CreatePropertyForm from "./CreatePropertyForm";
+import ActionForm from "@/components/ActionForm";
 
 export const runtime = "nodejs";
 
@@ -149,7 +150,7 @@ export default async function AdminDashboardPage() {
                     >
                       עריכה
                     </a>
-                    <form action={toggleProperty} id={`toggle-${property.id}`}>
+                    <ActionForm action={toggleProperty} id={`toggle-${property.id}`}>
                       <input type="hidden" name="id" value={property.id} />
                       <ConfirmActionButton
                         formId={`toggle-${property.id}`}
@@ -161,8 +162,8 @@ export default async function AdminDashboardPage() {
                             : "האם להפעיל את הנכס הזה ולהציג אותו באתר?"
                         }
                       />
-                    </form>
-                    <form action={deleteProperty} id={`delete-${property.id}`}>
+                    </ActionForm>
+                    <ActionForm action={deleteProperty} id={`delete-${property.id}`}>
                       <input type="hidden" name="id" value={property.id} />
                       <ConfirmActionButton
                         formId={`delete-${property.id}`}
@@ -171,7 +172,7 @@ export default async function AdminDashboardPage() {
                         description="האם למחוק את הנכס הזה לצמיתות? לא ניתן לשחזר."
                         variant="danger"
                       />
-                    </form>
+                    </ActionForm>
                   </div>
                 </div>
               ))
@@ -186,7 +187,7 @@ export default async function AdminDashboardPage() {
           <p className="mt-2 text-sm text-slate-600">
             פריטים בתיק העבודות נשמרים לצפייה פנימית בלבד.
           </p>
-          <form className="mt-6 grid gap-4" action={createPortfolioItem}>
+          <ActionForm className="mt-6 grid gap-4" action={createPortfolioItem}>
             <input
               className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
               aria-label="כותרת הפרויקט"
@@ -224,7 +225,7 @@ export default async function AdminDashboardPage() {
             >
               שמירה
             </button>
-          </form>
+          </ActionForm>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -258,7 +259,7 @@ export default async function AdminDashboardPage() {
                   {item.description ? (
                     <p className="mt-2 text-sm text-slate-600">{item.description}</p>
                   ) : null}
-                  <form
+                  <ActionForm
                     className="mt-3"
                     action={deletePortfolioItem}
                     id={`delete-portfolio-${item.id}`}
@@ -271,7 +272,7 @@ export default async function AdminDashboardPage() {
                       description="האם למחוק את הפריט הזה לצמיתות?"
                       variant="danger"
                     />
-                  </form>
+                  </ActionForm>
                 </div>
               ))
             )}

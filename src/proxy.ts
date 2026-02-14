@@ -27,7 +27,7 @@ const PUBLIC_PATHS = new Set([
 
 function buildCsp(nonce: string, isProd: boolean) {
   const scriptSrc = isProd
-    ? `script-src 'self' 'nonce-${nonce}'`
+    ? `script-src 'self' 'nonce-${nonce}' 'unsafe-inline'`
     : "script-src 'self' 'unsafe-inline'";
 
   return [
