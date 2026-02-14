@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Assistant, Playfair_Display } from "next/font/google";
-import { headers } from "next/headers";
 import { getUserFromCookies } from "@/lib/auth";
 import AppChrome from "./AppChrome";
 import "./globals.css";
@@ -31,13 +30,9 @@ export default async function RootLayout({
 }>) {
   const user = await getUserFromCookies();
   const isAdmin = user?.role === "ADMIN";
-  const store = await headers();
-  const nonce = store.get("x-nonce") ?? undefined;
-
   return (
     <html lang="he" dir="rtl">
       <body
-        nonce={nonce}
         className={`${assistant.variable} ${playfair.variable} bg-slate-50 text-slate-900 antialiased`}
       >
         <AppChrome isAdmin={isAdmin}>{children}</AppChrome>
