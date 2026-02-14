@@ -8,7 +8,6 @@ type HeaderAuthProps = Readonly<{
 }>;
 
 export default function HeaderAuth({ isAdmin }: HeaderAuthProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const handleLogout = async () => {
