@@ -18,6 +18,28 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+button,
+input[type="button"],
+input[type="submit"],
+a,
+[role="button"] {
+  cursor: pointer !important;
+}
+
+button,
+input[type="button"],
+input[type="submit"] {
+  appearance: button;
+  -webkit-appearance: button;
+}
+
+button:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 :focus-visible {
   outline: 2px solid #0f172a;
   outline-offset: 2px;
