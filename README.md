@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ANJELA TROYA - Real Estate Website
 
-## Getting Started
+אתר מקצועי לתיווך ושמאות נדל"ן, נבנה עם Next.js (App Router), Tailwind ו‑Prisma.
 
-First, run the development server:
+## הרצה מקומית
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+פתחו את `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## חיבור למסד נתונים (Supabase + Prisma)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. צרו פרויקט ב‑Supabase (Postgres).
+2. העתיקו את מחרוזת החיבור (DATABASE_URL) לקובץ `.env`:
 
-## Learn More
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/db"
+```
 
-To learn more about Next.js, take a look at the following resources:
+3. הריצו מיגרציה ראשונה:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx prisma migrate dev --name init
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ניהול משתמשים (Admin בלבד)
 
-## Deploy on Vercel
+כרגע עמוד `/admin` הוא ממשק התחברות בסיסי. אפשר לשלב אימות מלא בהמשך
+(לדוגמה: Hash לסיסמה, הרשאות, וממשק ניהול נכסים).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## פריסה ל‑Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. העלו את הריפו ל‑GitHub.
+2. חברו את הפרויקט ל‑Vercel.
+3. הוסיפו משתנה סביבה `DATABASE_URL` בהגדרות הפרויקט.
+4. הפקודה ל‑Build:
+
+```bash
+npm run build
+```
+
+## מבנה עמודים
+
+- `/` בית
+- `/about` אודות
+- `/properties/sale` דירות למכירה
+- `/properties/rent` דירות להשכרה
+- `/testimonials` המלצות
+- `/contact` צור קשר
+- `/admin` התחברות מנהל

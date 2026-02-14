@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Property {
+  id          String   @id
+  title       String
+  description String
+  price       String
+  type        PropertyType
+  isActive    Boolean  @default(true)
+  isHot       Boolean  @default(false)
+  imageUrls   String[] @default([])
+  details     Json?
+  address     String?
+  latitude    Float?
+  longitude   Float?
+  viewCount   Int      @default(0)
+  status      PropertyStatus @default(AVAILABLE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  inquiries   PropertyInquiry[]
+}
+
+model PropertyAlert {
+  id        String       @id @default(cuid())
+  email     String
+  type      PropertyType
+  minPrice  Float?
+  maxPrice  Float?
+  minRooms  Float?
+  consentAt DateTime     @default(now())
+  consentIp String?
+  consentUserAgent String?
+  consentSource String?
+  unsubscribeToken String @unique @default(cuid())
+  createdAt DateTime     @default(now())
+}
+
+model SuppressionEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  reason    String?
+  source    String?
+  createdAt DateTime @default(now())
+}
+
+model PropertyInquiry {
+  id         String   @id @default(cuid())
+  propertyId String
+  name       String
+  phone      String
+  email      String?
+  message    String
+  status     String   @default("new")
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model ContactInquiry {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  details   String
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+}
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  title       String
+  location    String?
+  outcome     String?
+  description String?
+  closedAt    DateTime?
+  isPrivate   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(ADMIN)
+  isActive     Boolean  @default(true)
+  tokenVersion Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum PropertyType {
+  SALE
+  RENT
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  SOLD
+  RENTED
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+}
