@@ -171,6 +171,9 @@ export async function getUserFromRequestCookie(token: string | undefined) {
 }
 
 export async function getUserFromCookies() {
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return null;
+  }
   const store = await getCookies();
   const token = store.get(COOKIE_NAME)?.value;
   return getUserFromRequestCookie(token);
