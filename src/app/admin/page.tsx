@@ -28,6 +28,11 @@ export default function AdminPage() {
       setError("פרטי התחברות שגויים. נסו שוב.");
       return;
     }
+    const data = (await response.json().catch(() => null)) as { role?: string } | null;
+    if (data?.role !== "ADMIN") {
+      setError("אין הרשאות מנהל למשתמש הזה.");
+      return;
+    }
 
     startTransition(() => {
       router.push("/admin/dashboard");

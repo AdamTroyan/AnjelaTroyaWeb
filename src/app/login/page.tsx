@@ -28,9 +28,11 @@ export default function LoginPage() {
       setError("פרטי התחברות שגויים. נסו שוב.");
       return;
     }
+    const data = (await response.json().catch(() => null)) as { role?: string } | null;
+    const nextPath = data?.role === "ADMIN" ? "/admin/dashboard" : "/";
 
     startTransition(() => {
-      router.push("/admin/dashboard");
+      router.push(nextPath);
     });
   };
 

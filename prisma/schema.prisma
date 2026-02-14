@@ -110,4 +110,5 @@ enum PropertyStatus {
 enum UserRole {
   ADMIN
   EDITOR
+  USER
 }

@@ -17,6 +17,7 @@ const COOKIE_NAME =
   process.env.NODE_ENV === "production" ? "__Host-admin_token" : "admin_token";
 
 const PUBLIC_PATHS = new Set([
+  "/admin",
   "/login",
   "/unsubscribe",
   "/api/auth/login",
@@ -108,10 +109,6 @@ async function verifyJwt(token: string, secret: string): Promise<JwtPayload | nu
     return null;
   }
 
-  if (payload.role !== "ADMIN") {
-    return null;
-  }
-
   return payload;
 }
 
@@ -119,6 +116,7 @@ export async function proxy(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl;
     const isApiRoute = pathname.startsWith("/api/");
+    const isAdminRoute = pathname.startsWith("/admin") && pathname !== "/admin";
 
     if (
       pathname.startsWith("/_next/") ||
@@ -141,6 +139,10 @@ export async function proxy(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    if (isAdminRoute && payload.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/", request.url));
     }
 
     const nonce = crypto.randomUUID().replace(/-/g, "");
