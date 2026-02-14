@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-export default function AdminPage() {
+export default function LoginPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -37,9 +37,9 @@ export default function AdminPage() {
   return (
     <section className="mx-auto w-full max-w-md px-6 py-20">
       <div className="rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-900">התחברות מנהל</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">התחברות</h1>
         <p className="mt-3 text-sm text-slate-600">
-          נא להזין אימייל וסיסמה.
+          הגישה לאתר מוגבלת. נא להזין אימייל וסיסמה.
         </p>
         <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
           <label className="text-sm font-semibold text-slate-700" htmlFor="email">
@@ -75,7 +75,6 @@ export default function AdminPage() {
             {isPending ? "מתחבר..." : "התחברות"}
           </button>
         </form>
-        <p className="mt-4 text-xs text-slate-500">המערכת תשמור אותך מחובר עד להתנתקות.</p>
       </div>
     </section>
   );
