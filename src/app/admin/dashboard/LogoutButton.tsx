@@ -3,7 +3,6 @@
 import { useTransition } from "react";
 
 export default function LogoutButton() {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const handleLogout = async () => {
