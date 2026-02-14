@@ -3,6 +3,7 @@
 import crypto from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getUserFromCookies } from "@/lib/auth";
@@ -97,6 +98,80 @@ function validateImageFile(file: File) {
   }
 }
 
+type R2Config = {
+  client: S3Client;
+  bucket: string;
+  publicBaseUrl: string;
+  prefix: string;
+};
+
+function getR2Config(): R2Config | null {
+  const endpoint = process.env.R2_ENDPOINT;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  const bucket = process.env.R2_BUCKET;
+  const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL;
+  const prefixValue = process.env.R2_PREFIX || "";
+
+  if (!endpoint || !accessKeyId || !secretAccessKey || !bucket || !publicBaseUrl) {
+    return null;
+  }
+
+  const normalizedBaseUrl = publicBaseUrl.replace(/\/+$/, "");
+  const normalizedPrefix = prefixValue
+    ? `${prefixValue.replace(/^\/+|\/+$/g, "")}/`
+    : "";
+
+  const client = new S3Client({
+    region: "auto",
+    endpoint,
+    credentials: { accessKeyId, secretAccessKey },
+    forcePathStyle: true,
+  });
+
+  return {
+    client,
+    bucket,
+    publicBaseUrl: normalizedBaseUrl,
+    prefix: normalizedPrefix,
+  };
+}
+
+async function uploadToR2(config: R2Config, file: File) {
+  const ext = getImageExtension(file);
+  const key = `${config.prefix}${crypto.randomUUID()}${ext}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  await config.client.send(
+    new PutObjectCommand({
+      Bucket: config.bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type || "application/octet-stream",
+    })
+  );
+
+  return `${config.publicBaseUrl}/${key}`;
+}
+
+async function deleteFromR2(config: R2Config, url: string) {
+  if (!url.startsWith(config.publicBaseUrl)) {
+    return;
+  }
+
+  const key = url.replace(`${config.publicBaseUrl}/`, "");
+  if (!key) {
+    return;
+  }
+
+  await config.client.send(
+    new DeleteObjectCommand({
+      Bucket: config.bucket,
+      Key: key,
+    })
+  );
+}
+
 function getSmtpConfigSafe() {
   const host = process.env.SMTP_HOST;
   const port = process.env.SMTP_PORT ? Number.parseInt(process.env.SMTP_PORT, 10) : NaN;
@@ -154,10 +229,10 @@ async function saveUploadedImages(files: File[]) {
   if (!files.length) {
     return [] as string[];
   }
-
-
-  await mkdir(uploadsDir, { recursive: true });
-
+  const r2Config = getR2Config();
+  if (!r2Config) {
+    await mkdir(uploadsDir, { recursive: true });
+  }
   const imageUrls: string[] = [];
   for (const file of files) {
     if (!file || typeof file.arrayBuffer !== "function" || file.size === 0) {
@@ -165,6 +240,12 @@ async function saveUploadedImages(files: File[]) {
     }
 
     validateImageFile(file);
+
+    if (r2Config) {
+      const url = await uploadToR2(r2Config, file);
+      imageUrls.push(url);
+      continue;
+    }
 
     const ext = getImageExtension(file);
     const filename = `${crypto.randomUUID()}${ext}`;
@@ -177,10 +258,23 @@ async function saveUploadedImages(files: File[]) {
   return imageUrls;
 }
 
-async function removeLocalUploads(urls: string[]) {
+async function removeUploads(urls: string[]) {
+  const r2Config = getR2Config();
   const removals = urls
     .filter((url) => url.startsWith("/uploads/"))
     .map((url) => path.join(process.cwd(), "public", url));
+
+  if (r2Config) {
+    for (const url of urls) {
+      try {
+        await deleteFromR2(r2Config, url);
+      } catch (error) {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to delete remote file", url, error);
+        }
+      }
+    }
+  }
 
   for (const filePath of removals) {
     try {
@@ -374,7 +468,13 @@ export async function deleteProperty(formData: FormData) {
     throw new Error("Missing id");
   }
 
+  const property = await prisma.property.findUnique({ where: { id } });
+  if (!property) {
+    throw new Error("Not found");
+  }
+
   await prisma.property.delete({ where: { id } });
+  await removeUploads(property.imageUrls);
   revalidatePath("/admin/dashboard");
 }
 
@@ -416,7 +516,7 @@ export async function updateProperty(formData: FormData) {
     (value): value is string => typeof value === "string" && value.length > 0
   );
   const removedImages = property.imageUrls.filter((url) => !keepImages.includes(url));
-  await removeLocalUploads(removedImages);
+  await removeUploads(removedImages);
 
   const imageFiles = formData.getAll("images");
   const files = imageFiles.filter(

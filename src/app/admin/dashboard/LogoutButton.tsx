@@ -10,8 +10,7 @@ export default function LogoutButton() {
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     startTransition(() => {
-      router.push("/admin");
-      router.refresh();
+      window.location.href = "/login";
     });
   };
 
