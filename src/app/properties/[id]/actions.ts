@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
 import { assertSameOriginFromHeaders } from "@/lib/csrf";
+import { getSiteUrl } from "@/lib/siteUrl";
 
 function getSmtpConfig() {
   const host = process.env.SMTP_HOST;
@@ -97,7 +98,7 @@ export async function createPropertyInquiry(formData: FormData) {
   });
 
   const details = normalizeDetails(property?.details);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "";
+  const siteUrl = getSiteUrl();
   const propertyUrl = siteUrl ? `${siteUrl.replace(/\/$/, "")}/properties/${propertyId}` : "";
   const mapUrl = property?.address
     ? `https://www.google.com/maps?q=${encodeURIComponent(property.address)}`

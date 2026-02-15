@@ -380,7 +380,7 @@ export default function EditPropertyForm({ action, property }: EditPropertyFormP
             defaultChecked={property.isActive}
           />
           {" "}
-          פעיל להצגה באתר
+          עולה באישור בעל הנכס (מוצג באתר רק כשמסומן)
         </label>
         <label className="flex items-center gap-2 text-sm text-slate-600">
           <input

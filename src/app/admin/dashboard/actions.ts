@@ -10,6 +10,7 @@ import { getUserFromCookies } from "@/lib/auth";
 import { assertSameOriginFromHeaders } from "@/lib/csrf";
 import nodemailer from "nodemailer";
 import { formatPrice } from "@/lib/format";
+import { getSiteUrl } from "@/lib/siteUrl";
 import { generatePropertyId } from "@/lib/propertyId";
 
 async function requireAdmin() {
@@ -366,7 +367,7 @@ export async function createProperty(formData: FormData) {
     });
 
     if (matched.length > 0) {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "";
+      const siteUrl = getSiteUrl();
       const propertyUrl = siteUrl
         ? `${siteUrl.replace(/\/$/, "")}/properties/${createdProperty.id}`
         : "";

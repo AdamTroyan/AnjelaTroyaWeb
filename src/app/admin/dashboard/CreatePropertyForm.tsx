@@ -300,10 +300,9 @@ export default function CreatePropertyForm({ action }: CreatePropertyFormProps) 
             className="h-4 w-4 rounded border-slate-300"
             type="checkbox"
             name="isActive"
-            defaultChecked
           />
           {" "}
-          פעיל להצגה באתר
+          עולה באישור בעל הנכס (מוצג באתר רק כשמסומן)
         </label>
         <label className="flex items-center gap-2 text-sm text-slate-600">
           <input

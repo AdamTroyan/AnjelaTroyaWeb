@@ -18,11 +18,14 @@ export default function ActionForm({
   const router = useRouter();
 
   const handleAction = async (formData: FormData) => {
-    await action(formData);
-    if (refreshMode === "reload") {
-      window.location.reload();
-    } else if (refreshMode === "refresh") {
-      router.refresh();
+    try {
+      await action(formData);
+    } finally {
+      if (refreshMode === "reload") {
+        window.location.reload();
+      } else if (refreshMode === "refresh") {
+        router.refresh();
+      }
     }
   };
 
