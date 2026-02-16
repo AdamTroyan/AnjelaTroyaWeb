@@ -23,7 +23,7 @@ export default async function AdminDashboardPage() {
     redirect("/admin");
   }
 
-  const [properties, portfolioItems, stats, topViewed] = await Promise.all([
+  const [properties, portfolioItems, stats, topViewed, inquiryStats] = await Promise.all([
     prisma.property.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.portfolioItem.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.property.aggregate({
@@ -40,7 +40,13 @@ export default async function AdminDashboardPage() {
         type: true,
       },
     }),
+    prisma.$transaction([
+      prisma.propertyInquiry.count(),
+      prisma.contactInquiry.count(),
+    ]),
   ]);
+
+  const [propertyInquiryCount, contactInquiryCount] = inquiryStats;
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-12">
@@ -54,7 +60,7 @@ export default async function AdminDashboardPage() {
         <LogoutButton />
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-8 grid gap-6 lg:grid-cols-4">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-xs font-semibold text-slate-500">נכסים במערכת</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900">
@@ -65,6 +71,18 @@ export default async function AdminDashboardPage() {
           <p className="text-xs font-semibold text-slate-500">צפיות בדפי נכסים</p>
           <p className="mt-2 text-2xl font-semibold text-slate-900">
             {stats._sum.viewCount ?? 0}
+          </p>
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold text-slate-500">פניות מנכסים</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">
+            {propertyInquiryCount}
+          </p>
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="text-xs font-semibold text-slate-500">פניות כלליות</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">
+            {contactInquiryCount}
           </p>
         </div>
       </div>

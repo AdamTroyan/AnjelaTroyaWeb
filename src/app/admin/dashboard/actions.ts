@@ -5,6 +5,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getUserFromCookies } from "@/lib/auth";
 import { assertSameOriginFromHeaders } from "@/lib/csrf";
@@ -12,6 +13,8 @@ import nodemailer from "nodemailer";
 import { formatPrice } from "@/lib/format";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { generatePropertyId } from "@/lib/propertyId";
+import { appendAuditLog } from "@/lib/auditLog";
+import { getClientIpFromHeaders } from "@/lib/rateLimit";
 
 async function requireAdmin() {
   const originCheck = await assertSameOriginFromHeaders();
@@ -23,6 +26,10 @@ async function requireAdmin() {
   if (user?.role !== "ADMIN") {
     throw new Error("Unauthorized");
   }
+
+  const headerStore = await headers();
+  const ip = getClientIpFromHeaders(headerStore);
+  return { user, ip };
 }
 
 const uploadsDir = path.join(process.cwd(), "public", "uploads");
@@ -301,7 +308,7 @@ async function removeUploads(urls: string[]) {
 }
 
 export async function createProperty(formData: FormData) {
-  await requireAdmin();
+  const { user, ip } = await requireAdmin();
 
   const titleValue = formData.get("title");
   const descriptionValue = formData.get("description");
@@ -448,10 +455,19 @@ export async function createProperty(formData: FormData) {
   revalidatePath("/admin/dashboard");
   revalidatePath("/properties/sale");
   revalidatePath("/properties/rent");
+
+  await appendAuditLog({
+    ts: new Date().toISOString(),
+    actorId: user.id,
+    actorEmail: user.email,
+    action: "property.create",
+    ip,
+    metadata: { id: createdProperty.id, title: createdProperty.title },
+  });
 }
 
 export async function toggleProperty(formData: FormData) {
-  await requireAdmin();
+  const { user, ip } = await requireAdmin();
 
   const idValue = formData.get("id");
   const id = typeof idValue === "string" ? idValue : "";
@@ -470,10 +486,19 @@ export async function toggleProperty(formData: FormData) {
   });
 
   revalidatePath("/admin/dashboard");
+
+  await appendAuditLog({
+    ts: new Date().toISOString(),
+    actorId: user.id,
+    actorEmail: user.email,
+    action: "property.toggle",
+    ip,
+    metadata: { id, isActive: !property.isActive },
+  });
 }
 
 export async function deleteProperty(formData: FormData) {
-  await requireAdmin();
+  const { user, ip } = await requireAdmin();
 
   const idValue = formData.get("id");
   const id = typeof idValue === "string" ? idValue : "";
@@ -489,10 +514,19 @@ export async function deleteProperty(formData: FormData) {
   await prisma.property.delete({ where: { id } });
   await removeUploads(property.imageUrls);
   revalidatePath("/admin/dashboard");
+
+  await appendAuditLog({
+    ts: new Date().toISOString(),
+    actorId: user.id,
+    actorEmail: user.email,
+    action: "property.delete",
+    ip,
+    metadata: { id, title: property.title },
+  });
 }
 
 export async function updateProperty(formData: FormData) {
-  await requireAdmin();
+  const { user, ip } = await requireAdmin();
 
   const idValue = formData.get("id");
   const id = typeof idValue === "string" ? idValue : "";
@@ -574,10 +608,19 @@ export async function updateProperty(formData: FormData) {
   revalidatePath(`/properties/${id}`);
   revalidatePath("/properties/sale");
   revalidatePath("/properties/rent");
+
+  await appendAuditLog({
+    ts: new Date().toISOString(),
+    actorId: user.id,
+    actorEmail: user.email,
+    action: "property.update",
+    ip,
+    metadata: { id, title },
+  });
 }
 
 export async function createPortfolioItem(formData: FormData) {
-  await requireAdmin();
+  const { user, ip } = await requireAdmin();
 
   const titleValue = formData.get("title");
   const locationValue = formData.get("location");
@@ -608,10 +651,19 @@ export async function createPortfolioItem(formData: FormData) {
   });
 
   revalidatePath("/admin/dashboard");
+
+  await appendAuditLog({
+    ts: new Date().toISOString(),
+    actorId: user.id,
+    actorEmail: user.email,
+    action: "portfolio.create",
+    ip,
+    metadata: { title },
+  });
 }
 
 export async function deletePortfolioItem(formData: FormData) {
-  await requireAdmin();
+  const { user, ip } = await requireAdmin();
 
   const idValue = formData.get("id");
   const id = typeof idValue === "string" ? idValue : "";
@@ -621,4 +673,13 @@ export async function deletePortfolioItem(formData: FormData) {
 
   await prisma.portfolioItem.delete({ where: { id } });
   revalidatePath("/admin/dashboard");
+
+  await appendAuditLog({
+    ts: new Date().toISOString(),
+    actorId: user.id,
+    actorEmail: user.email,
+    action: "portfolio.delete",
+    ip,
+    metadata: { id },
+  });
 }

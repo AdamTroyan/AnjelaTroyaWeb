@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   }
 
   const clientIp = getClientIp(request);
-  const rate = checkRateLimit(`favorites:by-ids:${clientIp}`, { limit: 60, windowMs: 10 * 60 * 1000 });
+  const rate = await checkRateLimit(`favorites:by-ids:${clientIp}`, { limit: 60, windowMs: 10 * 60 * 1000 });
   if (!rate.ok) {
     return Response.json(
       { error: "Too many requests" },

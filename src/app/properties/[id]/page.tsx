@@ -8,6 +8,7 @@ import ImageLightbox from "./ImageLightbox";
 import PropertyShareActions from "./PropertyShareActions";
 import { createPropertyInquiry } from "./actions";
 import FavoriteToggle from "../FavoriteToggle";
+import TurnstileField from "@/components/TurnstileField";
 
 export const runtime = "nodejs";
 
@@ -101,7 +102,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
       <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
         />
         {property.status !== "AVAILABLE" ? (
           <span className="absolute -left-12 top-8 w-44 -rotate-45 bg-rose-600 py-2 text-center text-xs font-semibold text-white">
@@ -266,6 +267,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
               placeholder="על מה תרצה לדעת?"
               required
             />
+            <TurnstileField className="mt-2" name="turnstileToken" />
             <button
               className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
               type="submit"

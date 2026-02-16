@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { assertSameOriginFromRequest } from "@/lib/csrf";
 import nodemailer from "nodemailer";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
   }
 
   const clientIp = getClientIp(request);
-  const rate = checkRateLimit(`contact:${clientIp}`, { limit: 15, windowMs: 10 * 60 * 1000 });
+  const rate = await checkRateLimit(`contact:${clientIp}`, { limit: 15, windowMs: 10 * 60 * 1000 });
   if (!rate.ok) {
     return NextResponse.json(
       { error: "Too many requests" },
@@ -55,6 +56,15 @@ export async function POST(request: Request) {
   if (!name || !phone || !details) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
+
+  await prisma.contactInquiry.create({
+    data: {
+      name,
+      phone,
+      email: email || null,
+      details,
+    },
+  });
 
   const smtp = getSmtpConfigSafe();
   if (smtp) {

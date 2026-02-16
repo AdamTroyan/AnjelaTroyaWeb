@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Assistant, Playfair_Display } from "next/font/google";
 import { getUserFromCookies } from "@/lib/auth";
+import { getSiteUrl } from "@/lib/siteUrl";
 import AppChrome from "./AppChrome";
 import "./globals.css";
 
@@ -16,9 +17,18 @@ const playfair = Playfair_Display({
   variable: "--font-display",
 });
 
+const siteUrl = getSiteUrl() || "https://anjelatroya.co.il";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "ANJELA TROYA | נדל\"ן ושמאות",
   description: "שירותי תיווך ושמאות נדל\"ן מקצועיים בישראל.",
+  openGraph: {
+    title: "ANJELA TROYA | נדל\"ן ושמאות",
+    description: "שירותי תיווך ושמאות נדל\"ן מקצועיים בישראל.",
+    type: "website",
+    url: siteUrl,
+  },
 };
 
 export const dynamic = "force-dynamic";

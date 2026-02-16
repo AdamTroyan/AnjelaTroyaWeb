@@ -7,9 +7,5 @@ export default async function AdminPage() {
   if (user?.role === "ADMIN") {
     redirect("/admin/dashboard");
   }
-  if (user) {
-    redirect("/");
-  }
-
   return <AdminLoginForm />;
 }

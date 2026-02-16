@@ -1,8 +1,32 @@
 import type { NextConfig } from "next";
 
+const imagePatterns = [] as Array<{
+  protocol: "http" | "https";
+  hostname: string;
+  port?: string;
+  pathname: string;
+}>;
+
+const r2PublicBaseUrl = process.env.R2_PUBLIC_BASE_URL;
+if (r2PublicBaseUrl) {
+  try {
+    const parsed = new URL(r2PublicBaseUrl);
+    const pathnameBase = parsed.pathname.replace(/\/+$/, "");
+    imagePatterns.push({
+      protocol: parsed.protocol.replace(":", "") as "http" | "https",
+      hostname: parsed.hostname,
+      port: parsed.port || undefined,
+      pathname: `${pathnameBase}/**`,
+    });
+  } catch {
+    // Ignore invalid config; fall back to no remote patterns.
+  }
+}
+
 const nextConfig: NextConfig = {
   generateEtags: false,
   poweredByHeader: false,
+  images: imagePatterns.length > 0 ? { remotePatterns: imagePatterns } : undefined,
   experimental: {
     serverActions: {
       bodySizeLimit: "50mb",

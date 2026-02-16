@@ -58,6 +58,12 @@ export default function AppChrome({ isAdmin, children }: AppChromeProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <a
+        className="sr-only focus:not-sr-only focus:absolute focus:right-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-900 focus:shadow"
+        href="#main-content"
+      >
+        מעבר לתוכן המרכזי
+      </a>
       <header className="border-b border-slate-200 bg-gradient-to-b from-white via-white/95 to-slate-50/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
           <div className="flex flex-col gap-1">
@@ -109,9 +115,12 @@ export default function AppChrome({ isAdmin, children }: AppChromeProps) {
           </nav>
         </div>
         {mobileOpen ? (
-          <div className="md:hidden">
-            <div className="fixed inset-0 z-40 bg-slate-900/20" onClick={() => setMobileOpen(false)} />
-            <div className="absolute left-0 right-0 top-full z-50 border-t border-slate-100 bg-white shadow-lg">
+          <div className="md:hidden" onClick={() => setMobileOpen(false)}>
+            <div className="fixed inset-0 z-40 bg-slate-900/20" />
+            <div
+              className="absolute left-0 right-0 top-full z-50 border-t border-slate-100 bg-white shadow-lg"
+              onClick={(event) => event.stopPropagation()}
+            >
               <nav className="mx-auto grid max-w-6xl gap-1 px-6 py-4 text-sm font-semibold text-slate-700">
                 {navItems.map((item) => (
                   <Link
@@ -145,6 +154,15 @@ export default function AppChrome({ isAdmin, children }: AppChromeProps) {
       <main className="flex-1" id="main-content">
         {children}
       </main>
+      <a
+        className="fixed bottom-5 left-5 z-50 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-700"
+        href="https://wa.me/972543179762"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="פתיחת שיחה ב-WhatsApp"
+      >
+        WhatsApp
+      </a>
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-2 px-6 py-6 text-center text-sm text-slate-500">
           <p>ANJELA TROYA - נדל&quot;ן ושמאות</p>

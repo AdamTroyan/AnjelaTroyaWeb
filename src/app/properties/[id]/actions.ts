@@ -1,10 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
 import { assertSameOriginFromHeaders } from "@/lib/csrf";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { checkRateLimit, getClientIpFromHeaders } from "@/lib/rateLimit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 function getSmtpConfig() {
   const host = process.env.SMTP_HOST;
@@ -65,17 +68,29 @@ export async function createPropertyInquiry(formData: FormData) {
     throw new Error("Invalid origin");
   }
 
+  const headerStore = await headers();
+  const clientIp = getClientIpFromHeaders(headerStore);
+  const rate = await checkRateLimit(`property-inquiry:${clientIp}`, {
+    limit: 8,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rate.ok) {
+    throw new Error("Too many requests");
+  }
+
   const propertyIdValue = formData.get("propertyId");
   const nameValue = formData.get("name");
   const phoneValue = formData.get("phone");
   const emailValue = formData.get("email");
   const messageValue = formData.get("message");
+  const turnstileValue = formData.get("turnstileToken");
 
   const propertyId = typeof propertyIdValue === "string" ? propertyIdValue : "";
   const name = typeof nameValue === "string" ? nameValue.trim() : "";
   const phone = typeof phoneValue === "string" ? phoneValue.trim() : "";
   const email = typeof emailValue === "string" ? emailValue.trim() : "";
   const message = typeof messageValue === "string" ? messageValue.trim() : "";
+  const turnstileToken = typeof turnstileValue === "string" ? turnstileValue : "";
 
   if (name.length > 120 || phone.length > 40 || email.length > 254 || message.length > 2000) {
     throw new Error("Invalid input");
@@ -83,6 +98,11 @@ export async function createPropertyInquiry(formData: FormData) {
 
   if (!propertyId || !name || !phone || !message) {
     throw new Error("Missing required fields");
+  }
+
+  const turnstileOk = await verifyTurnstile(turnstileToken, clientIp);
+  if (!turnstileOk) {
+    throw new Error("Captcha failed");
   }
 
   const property = await prisma.property.findUnique({
@@ -97,13 +117,27 @@ export async function createPropertyInquiry(formData: FormData) {
     },
   });
 
-  const details = normalizeDetails(property?.details);
+  if (!property) {
+    throw new Error("Property not found");
+  }
+
+  await prisma.propertyInquiry.create({
+    data: {
+      propertyId,
+      name,
+      phone,
+      email: email || null,
+      message,
+    },
+  });
+
+  const details = normalizeDetails(property.details);
   const siteUrl = getSiteUrl();
   const propertyUrl = siteUrl ? `${siteUrl.replace(/\/$/, "")}/properties/${propertyId}` : "";
-  const mapUrl = property?.address
+  const mapUrl = property.address
     ? `https://www.google.com/maps?q=${encodeURIComponent(property.address)}`
     : "";
-  const images = (property?.imageUrls ?? []).map((url) =>
+  const images = property.imageUrls.map((url) =>
     buildAbsoluteUrl(siteUrl, url)
   );
 
@@ -118,12 +152,12 @@ export async function createPropertyInquiry(formData: FormData) {
     },
   });
 
-  const subject = `פנייה חדשה לנכס: ${property?.title ?? propertyId}`;
+  const subject = `פנייה חדשה לנכס: ${property.title}`;
   const lines = [
-    `נכס: ${property?.title ?? ""}`,
-    `סוג: ${property?.type === "SALE" ? "למכירה" : "להשכרה"}`,
-    `מחיר: ${property?.price ?? ""}`,
-    property?.address ? `כתובת: ${property.address}` : "",
+    `נכס: ${property.title}`,
+    `סוג: ${property.type === "SALE" ? "למכירה" : "להשכרה"}`,
+    `מחיר: ${property.price ?? ""}`,
+    property.address ? `כתובת: ${property.address}` : "",
     propertyUrl ? `קישור לנכס: ${propertyUrl}` : "",
     "",
     `שם: ${name}`,

@@ -20,7 +20,7 @@ function renderHtml(message: string) {
 
 export async function GET(request: Request) {
   const clientIp = getClientIp(request);
-  const rate = checkRateLimit(`alerts:unsubscribe:${clientIp}`, { limit: 30, windowMs: 10 * 60 * 1000 });
+  const rate = await checkRateLimit(`alerts:unsubscribe:${clientIp}`, { limit: 30, windowMs: 10 * 60 * 1000 });
   if (!rate.ok) {
     return new Response(renderHtml("יותר מדי בקשות. נסו שוב מאוחר יותר."), {
       status: 429,

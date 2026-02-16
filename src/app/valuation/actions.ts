@@ -1,8 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import nodemailer from "nodemailer";
 import { assertSameOriginFromHeaders } from "@/lib/csrf";
+import { checkRateLimit, getClientIpFromHeaders } from "@/lib/rateLimit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 function getSmtpConfig() {
   const host = process.env.SMTP_HOST;
@@ -26,6 +29,13 @@ export async function createValuationInquiry(formData: FormData) {
     throw new Error("Invalid origin");
   }
 
+  const headerStore = await headers();
+  const clientIp = getClientIpFromHeaders(headerStore);
+  const rate = await checkRateLimit(`valuation:${clientIp}`, { limit: 6, windowMs: 10 * 60 * 1000 });
+  if (!rate.ok) {
+    throw new Error("Too many requests");
+  }
+
   const nameValue = formData.get("name");
   const phoneValue = formData.get("phone");
   const emailValue = formData.get("email");
@@ -33,6 +43,7 @@ export async function createValuationInquiry(formData: FormData) {
   const typeValue = formData.get("propertyType");
   const roomsValue = formData.get("rooms");
   const notesValue = formData.get("notes");
+  const turnstileValue = formData.get("turnstileToken");
 
   const name = typeof nameValue === "string" ? nameValue.trim() : "";
   const phone = typeof phoneValue === "string" ? phoneValue.trim() : "";
@@ -41,6 +52,7 @@ export async function createValuationInquiry(formData: FormData) {
   const propertyType = typeof typeValue === "string" ? typeValue.trim() : "";
   const rooms = typeof roomsValue === "string" ? roomsValue.trim() : "";
   const notes = typeof notesValue === "string" ? notesValue.trim() : "";
+  const turnstileToken = typeof turnstileValue === "string" ? turnstileValue : "";
 
   if (
     name.length > 120 ||
@@ -56,6 +68,11 @@ export async function createValuationInquiry(formData: FormData) {
 
   if (!name || !phone || !address) {
     throw new Error("Missing required fields");
+  }
+
+  const turnstileOk = await verifyTurnstile(turnstileToken, clientIp);
+  if (!turnstileOk) {
+    throw new Error("Captcha failed");
   }
 
   const details = [

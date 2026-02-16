@@ -15,6 +15,8 @@ type RateLimitResult = {
 
 type RateLimitStore = Map<string, RateLimitEntry>;
 
+type RateLimitCache = Map<string, unknown>;
+
 declare global {
   // eslint-disable-next-line no-var
   var __rateLimitStore: RateLimitStore | undefined;
@@ -23,7 +25,64 @@ declare global {
 const store: RateLimitStore = globalThis.__rateLimitStore ?? new Map();
 globalThis.__rateLimitStore = store;
 
-export function checkRateLimit(key: string, options: RateLimitOptions): RateLimitResult {
+const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __rateLimitCache: RateLimitCache | undefined;
+}
+
+const rateLimitCache: RateLimitCache = globalThis.__rateLimitCache ?? new Map();
+globalThis.__rateLimitCache = rateLimitCache;
+
+async function getUpstashRateLimit(limit: number, windowMs: number) {
+  if (!upstashUrl || !upstashToken) {
+    return null;
+  }
+
+  const cacheKey = `${limit}:${windowMs}`;
+  const cached = rateLimitCache.get(cacheKey);
+  if (cached) {
+    return cached as {
+      limit: (key: string) => Promise<{ success: boolean; reset: number }>;
+    };
+  }
+
+  const [{ Ratelimit }, { Redis }] = await Promise.all([
+    import("@upstash/ratelimit"),
+    import("@upstash/redis"),
+  ]);
+
+  const windowSeconds = Math.max(1, Math.ceil(windowMs / 1000));
+  const windowValue = (windowSeconds % 60 === 0
+    ? `${windowSeconds / 60} m`
+    : `${windowSeconds} s`) as `${number} s` | `${number} m`;
+
+  const redis = new Redis({ url: upstashUrl, token: upstashToken });
+  const limiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(limit, windowValue),
+  });
+
+  rateLimitCache.set(cacheKey, limiter);
+  return limiter;
+}
+
+export async function checkRateLimit(
+  key: string,
+  options: RateLimitOptions
+): Promise<RateLimitResult> {
+  const upstashLimiter = await getUpstashRateLimit(options.limit, options.windowMs);
+  if (upstashLimiter) {
+    const result = await upstashLimiter.limit(key);
+    if (result.success) {
+      return { ok: true, retryAfter: 0 };
+    }
+    const retryAfter = Math.max(0, Math.ceil((result.reset - Date.now()) / 1000));
+    return { ok: false, retryAfter };
+  }
+
   const now = Date.now();
   const entry = store.get(key);
   if (!entry || entry.resetAt <= now) {
@@ -42,10 +101,29 @@ export function checkRateLimit(key: string, options: RateLimitOptions): RateLimi
   return { ok: false, retryAfter };
 }
 
-export function getClientIp(request: Request) {
-  const forwarded = request.headers.get("x-forwarded-for");
+function extractClientIp(headers: Headers) {
+  const netlify = headers.get("x-nf-client-connection-ip");
+  if (netlify) {
+    return netlify.trim();
+  }
+
+  const cloudflare = headers.get("cf-connecting-ip");
+  if (cloudflare) {
+    return cloudflare.trim();
+  }
+
+  const forwarded = headers.get("x-forwarded-for");
   if (forwarded) {
     return forwarded.split(",")[0]?.trim() || "unknown";
   }
-  return request.headers.get("x-real-ip") || "unknown";
+
+  return headers.get("x-real-ip")?.trim() || "unknown";
+}
+
+export function getClientIp(request: Request) {
+  return extractClientIp(request.headers);
+}
+
+export function getClientIpFromHeaders(headers: Headers) {
+  return extractClientIp(headers);
 }

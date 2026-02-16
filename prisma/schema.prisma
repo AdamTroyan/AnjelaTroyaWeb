@@ -85,6 +85,17 @@ model PortfolioItem {
   updatedAt   DateTime @updatedAt
 }
 
+model Testimonial {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  hideLastName  Boolean  @default(false)
+  message       String
+  rating        Int
+  ip            String?
+  createdAt     DateTime @default(now())
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -94,6 +105,27 @@ model User {
   tokenVersion Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model LoginAttempt {
+  id               String   @id @default(cuid())
+  email            String
+  ip               String
+  count            Int      @default(0)
+  firstAttemptAt   DateTime @default(now())
+  lastAttemptAt    DateTime @default(now())
+  lastPasswordHint String?
+
+  @@unique([email, ip])
+}
+
+model LoginBlock {
+  id               String   @id @default(cuid())
+  email            String
+  ip               String
+  token            String   @unique
+  createdAt        DateTime @default(now())
+  lastPasswordHint String?
 }
 
 enum PropertyType {

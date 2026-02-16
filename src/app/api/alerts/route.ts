@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { assertSameOriginFromRequest } from "@/lib/csrf";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 function parseNumber(value: unknown) {
   if (typeof value !== "number" && typeof value !== "string") {
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
   }
 
   const clientIp = getClientIp(request);
-  const rate = checkRateLimit(`alerts:create:${clientIp}`, { limit: 20, windowMs: 10 * 60 * 1000 });
+  const rate = await checkRateLimit(`alerts:create:${clientIp}`, { limit: 20, windowMs: 10 * 60 * 1000 });
   if (!rate.ok) {
     return Response.json(
       { error: "Too many requests" },
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
   const maxPrice = parseNumber(body?.maxPrice);
   const minRooms = parseNumber(body?.minRooms);
   const consentSource = typeof body?.consentSource === "string" ? body.consentSource.trim() : "";
+  const turnstileToken = typeof body?.turnstileToken === "string" ? body.turnstileToken : "";
 
   if (!email || !isValidEmail(email) || !type) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
@@ -44,6 +46,10 @@ export async function POST(request: Request) {
 
   const userAgent = request.headers.get("user-agent") || null;
   const consentIp = clientIp || null;
+  const turnstileOk = await verifyTurnstile(turnstileToken, clientIp);
+  if (!turnstileOk) {
+    return Response.json({ error: "Captcha failed" }, { status: 400 });
+  }
 
   const alert = await prisma.propertyAlert.create({
     data: {

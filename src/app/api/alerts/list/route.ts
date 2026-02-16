@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   const clientIp = getClientIp(request);
-  const rate = checkRateLimit(`alerts:list:${clientIp}`, { limit: 30, windowMs: 10 * 60 * 1000 });
+  const rate = await checkRateLimit(`alerts:list:${clientIp}`, { limit: 30, windowMs: 10 * 60 * 1000 });
   if (!rate.ok) {
     return Response.json(
       { error: "Too many requests" },

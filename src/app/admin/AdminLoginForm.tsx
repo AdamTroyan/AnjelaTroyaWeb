@@ -7,6 +7,7 @@ export default function AdminLoginForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState(false);
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -21,10 +22,16 @@ export default function AdminLoginForm() {
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, adminLogin: true }),
     });
 
     if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (response.status === 403 && data?.error === "blocked") {
+        setBlocked(true);
+        setError("אתה חסום");
+        return;
+      }
       setError("פרטי התחברות שגויים. נסו שוב.");
       return;
     }
@@ -54,6 +61,7 @@ export default function AdminLoginForm() {
             name="email"
             type="email"
             required
+            disabled={blocked}
           />
           <label className="text-sm font-semibold text-slate-700" htmlFor="password">
             סיסמה
@@ -64,6 +72,7 @@ export default function AdminLoginForm() {
             name="password"
             type="password"
             required
+            disabled={blocked}
           />
           {error ? (
             <p className="text-sm text-rose-600" aria-live="polite">
@@ -73,7 +82,7 @@ export default function AdminLoginForm() {
           <button
             className="mt-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
             type="submit"
-            disabled={isPending}
+            disabled={isPending || blocked}
           >
             {isPending ? "מתחבר..." : "התחברות"}
           </button>

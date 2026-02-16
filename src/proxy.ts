@@ -18,6 +18,7 @@ const COOKIE_NAME =
 
 const PUBLIC_PATHS = new Set([
   "/admin",
+  "/admin/unblock",
   "/login",
   "/unsubscribe",
   "/api/auth/login",
