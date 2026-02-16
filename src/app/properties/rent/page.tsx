@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import PropertyListClient, { type PropertyCard } from "../PropertyListClient";
 
 export const runtime = "nodejs";
+export const revalidate = 60;
 
 export default async function RentPropertiesPage() {
   const properties = (await prisma.property.findMany({

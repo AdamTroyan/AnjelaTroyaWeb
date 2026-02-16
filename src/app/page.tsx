@@ -1,10 +1,21 @@
 import Link from "next/link";
-import HotPropertiesMap from "./HotPropertiesMap";
+import dynamic from "next/dynamic";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import type { Property } from "@prisma/client";
 
 export const runtime = "nodejs";
+export const revalidate = 60;
+
+const HotPropertiesMap = dynamic(() => import("./HotPropertiesMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+      טוען מפה...
+    </div>
+  ),
+});
 
 export default async function Home() {
   const [saleHighlights, rentHighlights, hotProperties] = await Promise.all([
@@ -118,10 +129,14 @@ export default async function Home() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex items-start gap-4">
                         {item.imageUrls[0] ? (
-                          <img
+                          <Image
                             className="h-20 w-24 rounded-xl object-cover"
                             src={item.imageUrls[0]}
                             alt={item.title}
+                            width={96}
+                            height={80}
+                            sizes="96px"
+                            unoptimized
                           />
                         ) : null}
                         <div>
@@ -176,10 +191,14 @@ export default async function Home() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="flex items-start gap-4">
                         {item.imageUrls[0] ? (
-                          <img
+                          <Image
                             className="h-20 w-24 rounded-xl object-cover"
                             src={item.imageUrls[0]}
                             alt={item.title}
+                            width={96}
+                            height={80}
+                            sizes="96px"
+                            unoptimized
                           />
                         ) : null}
                         <div>

@@ -14,6 +14,11 @@ export default function ImageLightbox({ images, title }: ImageLightboxProps) {
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
+  const closeLightbox = () => {
+    document.body.style.overflow = "";
+    setActiveIndex(null);
+  };
+
   useEffect(() => {
     if (activeIndex === null) {
       if (previousFocusRef.current) {
@@ -47,7 +52,7 @@ export default function ImageLightbox({ images, title }: ImageLightboxProps) {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setActiveIndex(null);
+        closeLightbox();
       }
       if (event.key === "ArrowRight") {
         setActiveIndex((current) => {
@@ -102,7 +107,7 @@ export default function ImageLightbox({ images, title }: ImageLightboxProps) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="lightbox-title"
-          onClick={() => setActiveIndex(null)}
+          onClick={closeLightbox}
           onWheel={(event) => event.preventDefault()}
         >
           <div className="relative h-full w-full">
@@ -175,7 +180,7 @@ export default function ImageLightbox({ images, title }: ImageLightboxProps) {
               <button
                 className="rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-slate-700"
                 type="button"
-                onClick={() => setActiveIndex(null)}
+                onClick={closeLightbox}
                 ref={closeButtonRef}
                 aria-label="סגירת חלון התמונות"
               >

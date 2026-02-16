@@ -194,36 +194,43 @@ async function geocodeAddress(address: string) {
     return null;
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "";
+  const siteUrl = getSiteUrl();
   const userAgent = `AnjelaTroyRealEstate/1.0 (${siteUrl || "local"})`;
   const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(
     query
   )}`;
 
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": userAgent,
-      "Accept-Language": "he",
-    },
-  });
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": userAgent,
+        "Accept-Language": "he",
+      },
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as Array<{ lat: string; lon: string }>;
+    const first = data[0];
+    if (!first) {
+      return null;
+    }
+
+    const latitude = Number.parseFloat(first.lat);
+    const longitude = Number.parseFloat(first.lon);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return null;
+    }
+
+    return { latitude, longitude };
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Failed to geocode address", error);
+    }
     return null;
   }
-
-  const data = (await response.json()) as Array<{ lat: string; lon: string }>;
-  const first = data[0];
-  if (!first) {
-    return null;
-  }
-
-  const latitude = Number.parseFloat(first.lat);
-  const longitude = Number.parseFloat(first.lon);
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    return null;
-  }
-
-  return { latitude, longitude };
 }
 
 async function saveUploadedImages(files: File[]) {
@@ -239,21 +246,26 @@ async function saveUploadedImages(files: File[]) {
     if (!file || typeof file.arrayBuffer !== "function" || file.size === 0) {
       continue;
     }
+    try {
+      validateImageFile(file);
 
-    validateImageFile(file);
+      if (r2Config) {
+        const url = await uploadToR2(r2Config, file);
+        imageUrls.push(url);
+        continue;
+      }
 
-    if (r2Config) {
-      const url = await uploadToR2(r2Config, file);
-      imageUrls.push(url);
-      continue;
+      const ext = getImageExtension(file);
+      const filename = `${crypto.randomUUID()}${ext}`;
+      const filePath = path.join(uploadsDir, filename);
+      const buffer = Buffer.from(await file.arrayBuffer());
+      await writeFile(filePath, buffer);
+      imageUrls.push(`/uploads/${filename}`);
+    } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Failed to upload image", error);
+      }
     }
-
-    const ext = getImageExtension(file);
-    const filename = `${crypto.randomUUID()}${ext}`;
-    const filePath = path.join(uploadsDir, filename);
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(filePath, buffer);
-    imageUrls.push(`/uploads/${filename}`);
   }
 
   return imageUrls;
@@ -304,7 +316,7 @@ export async function createProperty(formData: FormData) {
   const address = typeof addressValue === "string" ? addressValue.trim() : "";
   const isActive = formData.get("isActive") === "on";
   const detailsValue = formData.get("details");
-  const details = parseDetails(detailsValue);
+  const details = parseDetails(detailsValue) ?? [];
   const imageFiles = formData.getAll("images");
   const files = imageFiles.filter(
     (file): file is File => file instanceof File && file.size > 0

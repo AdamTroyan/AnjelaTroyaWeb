@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
+import { getSiteUrl } from "@/lib/siteUrl";
 import ImageLightbox from "./ImageLightbox";
 import PropertyShareActions from "./PropertyShareActions";
 import { createPropertyInquiry } from "./actions";
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: PropertyPageProps): Promise<M
     return {};
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "";
+  const siteUrl = getSiteUrl();
   const propertyUrl = siteUrl ? `${siteUrl.replace(/\/$/, "")}/properties/${id}` : undefined;
   const title = `דירה: ${property.title}`;
   const description = property.description?.slice(0, 160) || "נכס חדש באתר.";
@@ -59,7 +60,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
     whatsappMessage
   )}`;
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || "";
+  const siteUrl = getSiteUrl();
   const propertyUrl = siteUrl ? `${siteUrl.replace(/\/$/, "")}/properties/${property.id}` : "";
 
   const details = Array.isArray(property.details)

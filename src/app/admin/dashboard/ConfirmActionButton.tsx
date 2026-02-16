@@ -24,6 +24,11 @@ export default function ConfirmActionButton({
   const titleId = `${formId}-confirm-title`;
   const descriptionId = `${formId}-confirm-description`;
 
+  const closeDialog = () => {
+    document.body.style.overflow = "";
+    setIsOpen(false);
+  };
+
   const getFocusableElements = (container: HTMLElement | null) => {
     if (!container) {
       return [] as HTMLElement[];
@@ -59,7 +64,7 @@ export default function ConfirmActionButton({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsOpen(false);
+        closeDialog();
       }
 
       if (event.key !== "Tab") {
@@ -94,7 +99,7 @@ export default function ConfirmActionButton({
     if (form) {
       form.requestSubmit();
     }
-    setIsOpen(false);
+    closeDialog();
   };
 
   return (
@@ -113,7 +118,10 @@ export default function ConfirmActionButton({
       </button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-6">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-6"
+          onClick={closeDialog}
+        >
           <div
             className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl"
             role="dialog"
@@ -121,6 +129,7 @@ export default function ConfirmActionButton({
             aria-labelledby={titleId}
             aria-describedby={descriptionId}
             ref={dialogRef}
+            onClick={(event) => event.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-slate-900" id={titleId}>
               {title}
@@ -139,7 +148,7 @@ export default function ConfirmActionButton({
               <button
                 className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400"
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={closeDialog}
                 ref={cancelRef}
               >
                 ביטול

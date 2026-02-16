@@ -155,8 +155,12 @@ export default function PropertyMap({ markers, height = "360px" }: PropertyMapPr
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200">
-      <div ref={containerRef} style={{ height, width: "100%" }} />
+    <div className="relative z-0 overflow-hidden rounded-2xl border border-slate-200">
+      <div
+        ref={containerRef}
+        className="relative z-0"
+        style={{ height, width: "100%" }}
+      />
     </div>
   );
 }

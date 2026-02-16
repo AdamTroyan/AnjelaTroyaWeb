@@ -2,10 +2,20 @@
 
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import dynamic from "next/dynamic";
 import { formatPrice } from "@/lib/format";
 import FavoriteToggle from "./FavoriteToggle";
-import PropertyMap from "@/components/PropertyMap";
+const PropertyMap = dynamic(() => import("@/components/PropertyMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+      טוען מפה...
+    </div>
+  ),
+});
 
 type PropertyDetailsItem = {
   label: string;
@@ -85,6 +95,7 @@ export default function PropertyListClient({
   emptyLabel,
   alertType,
 }: PropertyListClientProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -104,6 +115,11 @@ export default function PropertyListClient({
   const alertTriggerRef = useRef<HTMLButtonElement | null>(null);
   const alertDialogRef = useRef<HTMLDivElement | null>(null);
   const alertCloseRef = useRef<HTMLButtonElement | null>(null);
+
+  const closeAlert = () => {
+    document.body.style.overflow = "";
+    setAlertOpen(false);
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -231,7 +247,7 @@ export default function PropertyListClient({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setAlertOpen(false);
+        closeAlert();
       }
 
       if (event.key !== "Tab") {
@@ -489,13 +505,17 @@ export default function PropertyListClient({
         </div>
 
         {alertOpen ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4"
+            onClick={closeAlert}
+          >
             <div
               className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl"
               role="dialog"
               aria-modal="true"
               aria-labelledby="alerts-dialog-title"
               ref={alertDialogRef}
+              onClick={(event) => event.stopPropagation()}
             >
               <div className="flex items-center justify-between gap-3">
                 <h3
@@ -507,7 +527,7 @@ export default function PropertyListClient({
                 <button
                   className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700"
                   type="button"
-                  onClick={() => setAlertOpen(false)}
+                  onClick={closeAlert}
                   ref={alertCloseRef}
                 >
                   סגירה
@@ -524,8 +544,9 @@ export default function PropertyListClient({
                     if (consentCookie && alertEmail.trim()) {
                       setCookieValue(ALERT_EMAIL_COOKIE, alertEmail.trim(), 180);
                     }
-                    setAlertOpen(false);
+                    closeAlert();
                   }
+                  router.refresh();
                 }}
               >
                 <input
@@ -659,10 +680,14 @@ export default function PropertyListClient({
                 {property.imageUrls[0] ? (
                   <div className="mt-4">
                     <p className="text-xs font-semibold text-slate-500">תמונות מהנכס:</p>
-                    <img
+                    <Image
                       className="mt-2 h-40 w-full rounded-xl object-cover"
                       src={property.imageUrls[0]}
                       alt={property.title}
+                      width={1200}
+                      height={480}
+                      sizes="(min-width: 1024px) 640px, 100vw"
+                      unoptimized
                     />
                   </div>
                 ) : null}

@@ -168,7 +168,7 @@ export default function CreatePropertyForm({ action }: CreatePropertyFormProps) 
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsOpen(false);
+        closeDialog();
       }
 
       if (event.key !== "Tab") {
@@ -197,6 +197,11 @@ export default function CreatePropertyForm({ action }: CreatePropertyFormProps) 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
+
+  const closeDialog = () => {
+    document.body.style.overflow = "";
+    setIsOpen(false);
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -338,13 +343,17 @@ export default function CreatePropertyForm({ action }: CreatePropertyFormProps) 
       </ActionForm>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-6">
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-6"
+          onClick={closeDialog}
+        >
           <div
             className="w-full max-w-3xl rounded-3xl bg-white p-6 shadow-xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="create-property-params-title"
             ref={dialogRef}
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold text-slate-900" id="create-property-params-title">
@@ -353,7 +362,7 @@ export default function CreatePropertyForm({ action }: CreatePropertyFormProps) 
               <button
                 className="rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700"
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={closeDialog}
                 ref={closeButtonRef}
               >
                 סגירה
@@ -572,7 +581,7 @@ export default function CreatePropertyForm({ action }: CreatePropertyFormProps) 
               <button
                 className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={closeDialog}
               >
                 שמירה
               </button>

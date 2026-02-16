@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type AlertItem = {
   id: string;
@@ -19,6 +20,7 @@ function formatAlertValue(label: string, value: number | null) {
 }
 
 export default function AlertsPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -60,6 +62,7 @@ export default function AlertsPage() {
     setAlerts(data.alerts ?? []);
     setMessage(data.alerts?.length ? "" : "אין התראות פעילות." );
     setLoading(false);
+    router.refresh();
   };
 
   const deleteAlert = async (id: string) => {
@@ -73,6 +76,7 @@ export default function AlertsPage() {
       return;
     }
     setAlerts((current) => current.filter((alert) => alert.id !== id));
+    router.refresh();
   };
 
   return (
