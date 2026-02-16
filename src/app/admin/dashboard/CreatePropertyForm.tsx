@@ -168,7 +168,7 @@ export default function CreatePropertyForm({ action }: CreatePropertyFormProps) 
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        closeDialog();
+        setIsOpen(false);
       }
 
       if (event.key !== "Tab") {
@@ -581,7 +581,7 @@ export default function CreatePropertyForm({ action }: CreatePropertyFormProps) 
               <button
                 className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                 type="button"
-                onClick={closeDialog}
+                onClick={() => setIsOpen(false)}
               >
                 שמירה
               </button>

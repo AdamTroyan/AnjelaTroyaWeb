@@ -328,6 +328,19 @@ export default function PropertyListClient({
     return true;
   };
 
+  useEffect(() => {
+    if (!alertOpen) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [alertOpen]);
+
   return (
     <section className="mx-auto w-full max-w-5xl px-6 py-16">
       <div className="rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
@@ -544,7 +557,7 @@ export default function PropertyListClient({
                     if (consentCookie && alertEmail.trim()) {
                       setCookieValue(ALERT_EMAIL_COOKIE, alertEmail.trim(), 180);
                     }
-                    closeAlert();
+                    setAlertOpen(false);
                   }
                   router.refresh();
                 }}
