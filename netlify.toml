@@ -1,7 +1,7 @@
 [build]
   command = "npm run build"
   publish = ".next"
-  environment = { SECRETS_SCAN_OMIT_KEYS = "SITE_URL,ADMIN_EMAIL,SMTP_HOST,SMTP_PORT,SMTP_SECURE,SMTP_FROM,SMTP_TO,SMTP_USER" }
+  environment = { SECRETS_SCAN_OMIT_KEYS = "SITE_URL,ADMIN_EMAIL,SMTP_HOST,SMTP_PORT,SMTP_SECURE,SMTP_FROM,SMTP_TO,SMTP_USER,R2_BUCKET" }
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
