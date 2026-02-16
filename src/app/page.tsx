@@ -1,21 +1,12 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import type { Property } from "@prisma/client";
+import HotPropertiesMap from "./HotPropertiesMap";
 
 export const runtime = "nodejs";
 export const revalidate = 60;
-
-const HotPropertiesMap = dynamic(() => import("./HotPropertiesMap"), {
-  ssr: false,
-  loading: () => (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-      טוען מפה...
-    </div>
-  ),
-});
 
 export default async function Home() {
   const [saleHighlights, rentHighlights, hotProperties] = await Promise.all([
