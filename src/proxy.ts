@@ -13,8 +13,8 @@ type JwtPayload = {
 const JWT_ISSUER = "anjelaweb";
 const JWT_AUDIENCE = "admin";
 
-const COOKIE_NAME =
-  process.env.NODE_ENV === "production" ? "__Host-admin_token" : "admin_token";
+const USE_HTTPS = process.env.SITE_URL?.startsWith("https://") ?? false;
+const COOKIE_NAME = USE_HTTPS ? "__Host-admin_token" : "admin_token";
 
 const PUBLIC_PATHS = new Set([
   "/admin",

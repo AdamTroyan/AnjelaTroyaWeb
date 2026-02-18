@@ -9,7 +9,7 @@
 set -e
 
 # Configuration
-APP_DIR="/var/www/anjelaweb"
+APP_DIR="/var/www/AnjelaTroyaWeb"
 BACKUP_DIR="/var/backups/anjelaweb"
 DB_NAME="anjelaweb"
 RETENTION_DAYS=7

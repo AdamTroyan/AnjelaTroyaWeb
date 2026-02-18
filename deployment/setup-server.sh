@@ -113,7 +113,7 @@ systemctl start fail2ban
 
 # Create application directory
 print_status "Creating application directory..."
-mkdir -p /var/www/anjelaweb
+mkdir -p /var/www/AnjelaTroyaWeb
 mkdir -p /var/www/certbot
 
 # Setup PostgreSQL database
@@ -187,7 +187,7 @@ sysctl -p
 
 # Create .env template
 print_status "Creating environment file template..."
-cat > /var/www/anjelaweb/.env <<EOF
+cat > /var/www/AnjelaTroyaWeb/.env <<EOF
 # Database Configuration
 DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?schema=public"
 
@@ -204,9 +204,9 @@ NODE_ENV="production"
 PORT=3000
 EOF
 
-chmod 600 /var/www/anjelaweb/.env
+chmod 600 /var/www/AnjelaTroyaWeb/.env
 
-print_status "Environment file created at /var/www/anjelaweb/.env"
+print_status "Environment file created at /var/www/AnjelaTroyaWeb/.env"
 print_warning "Remember to edit this file with your actual domain and credentials!"
 
 # Summary
@@ -216,8 +216,8 @@ print_status "Server setup completed successfully!"
 echo "========================================="
 echo ""
 echo "Next steps:"
-echo "1. Clone your repository to /var/www/anjelaweb"
-echo "2. Edit /var/www/anjelaweb/.env with your configuration"
+echo "1. Clone your repository to /var/www/AnjelaTroyaWeb"
+echo "2. Edit /var/www/AnjelaTroyaWeb/.env with your configuration"
 echo "3. Run the deploy.sh script to build and start the application"
 echo "4. Configure Nginx with your domain"
 echo "5. Setup SSL with: certbot --nginx -d yourdomain.com"

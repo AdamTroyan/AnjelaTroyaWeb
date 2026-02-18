@@ -4,7 +4,7 @@ module.exports = {
       name: 'anjelaweb',
       script: 'node_modules/.bin/next',
       args: 'start',
-      cwd: '/var/www/anjelaweb',
+      cwd: '/var/www/AnjelaTroyaWeb',
       instances: 1,
       exec_mode: 'cluster',
       autorestart: true,

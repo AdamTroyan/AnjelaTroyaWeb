@@ -7,7 +7,7 @@
 
 set -e  # Exit on error
 
-APP_DIR="/var/www/anjelaweb"
+APP_DIR="/var/www/AnjelaTroyaWeb"
 APP_NAME="anjelaweb"
 
 # Colors

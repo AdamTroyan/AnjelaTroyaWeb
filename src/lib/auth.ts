@@ -3,8 +3,8 @@ import { cookies as getCookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
 const TOKEN_TTL_SECONDS = 60 * 30; // 30 minutes
-export const COOKIE_NAME =
-  process.env.NODE_ENV === "production" ? "__Host-admin_token" : "admin_token";
+const USE_HTTPS = process.env.SITE_URL?.startsWith("https://") ?? false;
+export const COOKIE_NAME = USE_HTTPS ? "__Host-admin_token" : "admin_token";
 const JWT_ISSUER = "anjelaweb";
 const JWT_AUDIENCE = "admin";
 const JWT_ALG = "HS256";
@@ -113,7 +113,7 @@ export function buildAuthCookie(token: string) {
     value: token,
     httpOnly: true,
     sameSite: "strict" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: USE_HTTPS,
     path: "/",
     maxAge: TOKEN_TTL_SECONDS,
   };
@@ -125,7 +125,7 @@ export function buildLogoutCookie() {
     value: "",
     httpOnly: true,
     sameSite: "strict" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: USE_HTTPS,
     path: "/",
     maxAge: 0,
   };
