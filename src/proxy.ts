@@ -26,20 +26,19 @@ const PUBLIC_PATHS = new Set([
 ]);
 
 function buildCsp() {
-  return [
+  const cspDirectives = [
     "default-src 'self'",
     "object-src 'none'",
-    "script-src 'self' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https://nominatim.openstreetmap.org",
-    "frame-src https://www.google.com https://maps.google.com",
+    "connect-src 'self' https://nominatim.openstreetmap.org https://challenges.cloudflare.com",
+    "frame-src https://www.google.com https://maps.google.com https://challenges.cloudflare.com",
     "base-uri 'self'",
     "frame-ancestors 'self'",
-  ]
-    .filter(Boolean)
-    .join("; ");
+  ];
+  return cspDirectives.join("; ");
 }
 
 function base64urlDecodeToBytes(value: string) {
@@ -164,12 +163,18 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // User is authenticated, apply CSP and allow access
-    const csp = buildCsp();
+    // User is authenticated, allow access
     const response = NextResponse.next();
-    response.headers.set("Content-Security-Policy", csp);
+    
+    // Only apply security headers on non-API routes
+    if (!isApiRoute) {
+      const csp = buildCsp();
+      response.headers.set("Content-Security-Policy", csp);
+    }
+    
     return response;
-  } catch {
+  } catch (error) {
+    console.error("Proxy error:", error);
     return NextResponse.redirect(new URL("/login", request.url));
   }
 }
