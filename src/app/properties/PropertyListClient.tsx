@@ -327,26 +327,15 @@ export default function PropertyListClient({
     const data = (await response.json()) as { id?: string; unsubscribeToken?: string };
     if (data.unsubscribeToken) {
       const maxAge = 365 * 24 * 60 * 60;
-      document.cookie = `alerts_token=${encodeURIComponent(data.unsubscribeToken)}; Max-Age=${maxAge}; Path=/; SameSite=Strict; Secure`;
+      const isHttps = window.location.protocol === "https:";
+      const secureFlag = isHttps ? "; Secure" : "";
+      document.cookie = `alerts_token=${encodeURIComponent(data.unsubscribeToken)}; Max-Age=${maxAge}; Path=/; SameSite=Strict${secureFlag}`;
     }
 
     setAlertMessage("ההתראה נשמרה! נשלח עדכונים לפי הסינון שבחרת.");
     setAlertEmail("");
     return true;
   };
-
-  useEffect(() => {
-    if (!alertOpen) {
-      return undefined;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [alertOpen]);
 
   return (
     <section className="mx-auto w-full max-w-5xl px-6 py-16">
