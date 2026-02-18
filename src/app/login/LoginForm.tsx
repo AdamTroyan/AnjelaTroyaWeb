@@ -3,7 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-export default function LoginForm() {
+type Props = {
+  redirectTo?: string;
+};
+
+export default function LoginForm({ redirectTo = "/" }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +40,7 @@ export default function LoginForm() {
       return;
     }
     const data = (await response.json().catch(() => null)) as { role?: string } | null;
-    const nextPath = data?.role === "ADMIN" ? "/admin/dashboard" : "/";
+    const nextPath = data?.role === "ADMIN" ? "/admin/dashboard" : redirectTo;
 
     startTransition(() => {
       router.push(nextPath);
