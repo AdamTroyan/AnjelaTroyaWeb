@@ -112,7 +112,7 @@ async function verifyJwt(token: string, secret: string): Promise<JwtPayload | nu
   return payload;
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl;
     const isApiRoute = pathname.startsWith("/api/");
