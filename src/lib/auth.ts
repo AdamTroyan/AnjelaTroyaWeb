@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { cookies as getCookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
-const TOKEN_TTL_SECONDS = 60 * 60 * 2;
+const TOKEN_TTL_SECONDS = 60 * 30; // 30 minutes
 export const COOKIE_NAME =
   process.env.NODE_ENV === "production" ? "__Host-admin_token" : "admin_token";
 const JWT_ISSUER = "anjelaweb";
@@ -158,7 +158,10 @@ export async function getUserFromRequestCookie(token: string | undefined) {
     return null;
   }
 
-  const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+  const user = await prisma.user.findUnique({
+    where: { id: payload.sub },
+    select: { id: true, email: true, role: true, isActive: true, tokenVersion: true },
+  });
   if (!user?.isActive) {
     return null;
   }

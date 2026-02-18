@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 
-const WHATSAPP_NUMBER = "972543179762";
-const CONTACT_PHONE = "+972543179762";
-const CONTACT_EMAIL = "adamtroy@gmail.com";
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "972543179762";
+const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || "+972543179762";
+const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "adamtroy@gmail.com";
 
 type DealType = "SALE" | "RENT";
 
@@ -16,42 +16,52 @@ export default function OwnerLeadCard() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!name.trim() || !address.trim() || !phone.trim()) {
       setStatus("error");
+      setErrorMessage("נא למלא את כל השדות החובה.");
       return;
     }
 
     setStatus("sending");
+    setErrorMessage("");
     const details = [
       `סוג פנייה: ${dealType === "SALE" ? "מכירה" : "השכרה"}`,
       `כתובת בניין: ${address.trim()}`,
       "מקור: עמוד מעוניין למכור/להשכיר",
     ].join("\n");
 
-    const response = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        phone: phone.trim(),
-        email: email.trim() || null,
-        details,
-      }),
-    });
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          email: email.trim() || null,
+          details,
+        }),
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setStatus("error");
+        setErrorMessage(data?.error === "Too many requests" ? "יותר מדי בקשות, נסו שוב מאוחר יותר." : "שליחת הפנייה נכשלה. נסו שוב.");
+        return;
+      }
+
+      setStatus("success");
+      setName("");
+      setAddress("");
+      setPhone("");
+      setEmail("");
+    } catch {
       setStatus("error");
-      return;
+      setErrorMessage("שגיאת רשת, נסו שוב.");
     }
-
-    setStatus("success");
-    setName("");
-    setAddress("");
-    setPhone("");
-    setEmail("");
   };
 
   const whatsappMessage = `שלום, אני מעוניין/ת ${dealType === "SALE" ? "למכור" : "להשכיר"} נכס.`;
@@ -176,7 +186,7 @@ export default function OwnerLeadCard() {
         ) : null}
         {status === "error" ? (
           <p className="text-xs font-semibold text-rose-600" aria-live="polite">
-            נא למלא את כל השדות החובה.
+            {errorMessage}
           </p>
         ) : null}
         <p className="text-xs text-slate-500">

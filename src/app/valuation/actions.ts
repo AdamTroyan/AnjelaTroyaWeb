@@ -5,7 +5,15 @@ import { headers } from "next/headers";
 import nodemailer from "nodemailer";
 import { assertSameOriginFromHeaders } from "@/lib/csrf";
 import { checkRateLimit, getClientIpFromHeaders } from "@/lib/rateLimit";
-import { verifyTurnstile } from "@/lib/turnstile";
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function getSmtpConfig() {
   const host = process.env.SMTP_HOST;
@@ -43,7 +51,6 @@ export async function createValuationInquiry(formData: FormData) {
   const typeValue = formData.get("propertyType");
   const roomsValue = formData.get("rooms");
   const notesValue = formData.get("notes");
-  const turnstileValue = formData.get("turnstileToken");
 
   const name = typeof nameValue === "string" ? nameValue.trim() : "";
   const phone = typeof phoneValue === "string" ? phoneValue.trim() : "";
@@ -52,7 +59,6 @@ export async function createValuationInquiry(formData: FormData) {
   const propertyType = typeof typeValue === "string" ? typeValue.trim() : "";
   const rooms = typeof roomsValue === "string" ? roomsValue.trim() : "";
   const notes = typeof notesValue === "string" ? notesValue.trim() : "";
-  const turnstileToken = typeof turnstileValue === "string" ? turnstileValue : "";
 
   if (
     name.length > 120 ||
@@ -68,11 +74,6 @@ export async function createValuationInquiry(formData: FormData) {
 
   if (!name || !phone || !address) {
     throw new Error("Missing required fields");
-  }
-
-  const turnstileOk = await verifyTurnstile(turnstileToken, clientIp);
-  if (!turnstileOk) {
-    throw new Error("Captcha failed");
   }
 
   const details = [
@@ -121,15 +122,15 @@ export async function createValuationInquiry(formData: FormData) {
         <table style="width:100%;border-collapse:collapse;">
           <tr>
             <td style="padding:6px 0;color:#64748b;font-size:12px;">שם</td>
-            <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${name}</td>
+            <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${escapeHtml(name)}</td>
           </tr>
           <tr>
             <td style="padding:6px 0;color:#64748b;font-size:12px;">טלפון</td>
-            <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${phone}</td>
+            <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${escapeHtml(phone)}</td>
           </tr>
           <tr>
             <td style="padding:6px 0;color:#64748b;font-size:12px;">אימייל</td>
-            <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${email || "ללא"}</td>
+            <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${escapeHtml(email || "ללא")}</td>
           </tr>
         </table>
 
@@ -138,10 +139,10 @@ export async function createValuationInquiry(formData: FormData) {
           <table style="width:100%;border-collapse:collapse;">
             <tr>
               <td style="padding:6px 0;color:#64748b;font-size:12px;">כתובת</td>
-              <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${address}</td>
+              <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${escapeHtml(address)}</td>
             </tr>
-            ${propertyType ? `<tr><td style="padding:6px 0;color:#64748b;font-size:12px;">סוג נכס</td><td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${propertyType}</td></tr>` : ""}
-            ${rooms ? `<tr><td style="padding:6px 0;color:#64748b;font-size:12px;">חדרים</td><td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${rooms}</td></tr>` : ""}
+            ${propertyType ? `<tr><td style="padding:6px 0;color:#64748b;font-size:12px;">סוג נכס</td><td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${escapeHtml(propertyType)}</td></tr>` : ""}
+            ${rooms ? `<tr><td style="padding:6px 0;color:#64748b;font-size:12px;">חדרים</td><td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${escapeHtml(rooms)}</td></tr>` : ""}
           </table>
         </div>
 
@@ -149,7 +150,7 @@ export async function createValuationInquiry(formData: FormData) {
           notes
             ? `<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e2e8f0;">
                 <p style="margin:0 0 6px;color:#64748b;font-size:12px;">הערות</p>
-                <p style="margin:0;color:#0f172a;font-size:13px;line-height:1.6;white-space:pre-wrap;">${notes}</p>
+                <p style="margin:0;color:#0f172a;font-size:13px;line-height:1.6;white-space:pre-wrap;">${escapeHtml(notes)}</p>
               </div>`
             : ""
         }

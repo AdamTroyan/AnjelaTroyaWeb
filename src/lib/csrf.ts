@@ -6,7 +6,7 @@ type SameOriginResult = {
 
 function isSameOriginValue(originValue: string | null, hostValue: string | null) {
   if (!originValue || !hostValue) {
-    return true;
+    return false;
   }
 
   try {
@@ -22,6 +22,10 @@ export function assertSameOriginFromRequest(request: Request): SameOriginResult 
   const origin = request.headers.get("origin");
   const referer = request.headers.get("referer");
   const host = request.headers.get("host");
+
+  if (!origin && !referer) {
+    return { ok: false };
+  }
 
   if (origin && !isSameOriginValue(origin, host)) {
     return { ok: false };
@@ -46,6 +50,10 @@ export async function assertSameOriginFromHeaders(): Promise<SameOriginResult> {
   const origin = store.get("origin");
   const referer = store.get("referer");
   const host = store.get("host");
+
+  if (!origin && !referer) {
+    return { ok: false };
+  }
 
   if (origin && !isSameOriginValue(origin, host)) {
     return { ok: false };

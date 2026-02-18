@@ -8,7 +8,6 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { formatPrice } from "@/lib/format";
 import FavoriteToggle from "./FavoriteToggle";
-import TurnstileField from "@/components/TurnstileField";
 const PropertyMap = dynamic(() => import("@/components/PropertyMap"), {
   ssr: false,
   loading: () => (
@@ -113,7 +112,6 @@ export default function PropertyListClient({
   const [alertOpen, setAlertOpen] = useState(false);
   const [consentCookie, setConsentCookie] = useState(false);
   const [alertConsent, setAlertConsent] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState("");
   const alertTriggerRef = useRef<HTMLButtonElement | null>(null);
   const alertDialogRef = useRef<HTMLDivElement | null>(null);
   const alertCloseRef = useRef<HTMLButtonElement | null>(null);
@@ -317,13 +315,19 @@ export default function PropertyListClient({
         maxPrice: maxPrice.trim() ? parseNumber(maxPrice) : null,
         minRooms: minRooms.trim() ? parseNumber(minRooms) : null,
         consentSource: alertType === "SALE" ? "alerts-sale" : "alerts-rent",
-        turnstileToken,
       }),
     });
 
     if (!response.ok) {
       setAlertError("לא הצלחנו לשמור את ההתראה. נסה שוב.");
       return false;
+    }
+
+    // Store unsubscribeToken in cookie for managing alerts later
+    const data = (await response.json()) as { id?: string; unsubscribeToken?: string };
+    if (data.unsubscribeToken) {
+      const maxAge = 365 * 24 * 60 * 60;
+      document.cookie = `alerts_token=${encodeURIComponent(data.unsubscribeToken)}; Max-Age=${maxAge}; Path=/; SameSite=Strict; Secure`;
     }
 
     setAlertMessage("ההתראה נשמרה! נשלח עדכונים לפי הסינון שבחרת.");
@@ -630,7 +634,6 @@ export default function PropertyListClient({
                   />
                   אני מסכים/ה לשמירת האימייל בקוקיז לצורך נוחות בניהול התראות.
                 </label>
-                <TurnstileField className="mt-2" onToken={setTurnstileToken} />
                 <p className="text-xs text-slate-500">
                   שמירת התראה מהווה הסכמה לקבלת התראות על נכסים תואמים. ניתן להסיר
                   בכל עת דרך קישור הסרה בכל מייל או מניהול ההתראות באתר. לפרטים:

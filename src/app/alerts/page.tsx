@@ -22,6 +22,7 @@ function formatAlertValue(label: string, value: number | null) {
 export default function AlertsPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [unsubscribeToken, setUnsubscribeToken] = useState("");
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -29,28 +30,36 @@ export default function AlertsPage() {
   const [autoLoaded, setAutoLoaded] = useState(false);
 
   useEffect(() => {
-    const match = document.cookie.match(/(?:^|; )alerts_email=([^;]*)/);
-    if (match) {
-      const stored = decodeURIComponent(match[1]);
+    const emailMatch = document.cookie.match(/(?:^|; )alerts_email=([^;]*)/);
+    if (emailMatch) {
+      const stored = decodeURIComponent(emailMatch[1]);
       setEmail(stored);
+    }
+    const tokenMatch = document.cookie.match(/(?:^|; )alerts_token=([^;]*)/);
+    if (tokenMatch) {
+      setUnsubscribeToken(decodeURIComponent(tokenMatch[1]));
     }
   }, []);
 
   useEffect(() => {
-    if (!autoLoaded && email) {
+    if (!autoLoaded && email && unsubscribeToken) {
       setAutoLoaded(true);
       void loadAlerts();
     }
-  }, [autoLoaded, email]);
+  }, [autoLoaded, email, unsubscribeToken]);
 
   const loadAlerts = async () => {
+    if (!unsubscribeToken) {
+      setError("לא נמצא אסימון הרשאה. נסו להירשם להתראה מחדש.");
+      return;
+    }
     setLoading(true);
     setMessage("");
     setError("");
     const response = await fetch("/api/alerts/list", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, unsubscribeToken }),
     });
     if (!response.ok) {
       setError("לא נמצאו התראות או שהאימייל לא תקין.");
@@ -69,7 +78,7 @@ export default function AlertsPage() {
     const response = await fetch("/api/alerts/delete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, email }),
+      body: JSON.stringify({ id, email, unsubscribeToken }),
     });
     if (!response.ok) {
       setError("לא הצלחנו למחוק את ההתראה.");

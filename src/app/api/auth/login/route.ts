@@ -9,7 +9,7 @@ import { getSiteUrl } from "@/lib/siteUrl";
 
 export const runtime = "nodejs";
 
-const ADMIN_ALERT_EMAIL = "adamulyalox@gmail.com";
+const ADMIN_ALERT_EMAIL = process.env.ADMIN_ALERT_EMAIL || "";
 const MAX_LOGIN_ATTEMPTS = 5;
 
 function getSmtpConfigSafe() {
@@ -28,12 +28,16 @@ function getSmtpConfigSafe() {
 }
 
 function getPasswordHint(password: string) {
-  if (!password) {
-    return "(empty)";
-  }
-  const head = password.slice(0, 4);
-  const suffix = password.length > 4 ? "…" : "";
-  return `${head}${suffix} (${password.length})`;
+  return password ? "(provided)" : "(empty)";
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 async function recordFailedAttempt(params: {
@@ -110,15 +114,15 @@ async function recordFailedAttempt(params: {
                   <table style="width:100%;border-collapse:collapse;">
                     <tr>
                       <td style="padding:6px 0;color:#64748b;font-size:12px;">אימייל</td>
-                      <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${params.email}</td>
+                      <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${escapeHtml(params.email)}</td>
                     </tr>
                     <tr>
                       <td style="padding:6px 0;color:#64748b;font-size:12px;">IP</td>
-                      <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${params.ip}</td>
+                      <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${escapeHtml(params.ip)}</td>
                     </tr>
                     <tr>
                       <td style="padding:6px 0;color:#64748b;font-size:12px;">סיסמה (רמז)</td>
-                      <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${params.passwordHint}</td>
+                      <td style="padding:6px 0;color:#0f172a;font-size:12px;font-weight:600;">${escapeHtml(params.passwordHint)}</td>
                     </tr>
                   </table>
                   <div style="margin-top:16px;text-align:center;">
@@ -140,11 +144,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
   }
 
-  const disableRateLimit =
-    process.env.NODE_ENV !== "production" || process.env.DISABLE_LOGIN_RATE_LIMIT === "true";
-  if (!disableRateLimit) {
+  const loginRateLimit = process.env.NODE_ENV === "production" ? 5 : 20;
+  {
     const clientIp = getClientIp(request);
-    const rate = await checkRateLimit(`login:${clientIp}`, { limit: 5, windowMs: 10 * 60 * 1000 });
+    const rate = await checkRateLimit(`login:${clientIp}`, { limit: loginRateLimit, windowMs: 10 * 60 * 1000 });
     if (!rate.ok) {
       return NextResponse.json(
         { error: "Too many attempts" },
@@ -181,7 +184,10 @@ export async function POST(request: Request) {
     }
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, email: true, role: true, isActive: true, passwordHash: true, tokenVersion: true },
+  });
   if (!user?.isActive) {
     if (adminLogin) {
       const result = await recordFailedAttempt({ email, ip: clientIp, passwordHint });

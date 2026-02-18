@@ -11,7 +11,12 @@
     "lint": "eslint",
     "create-admin": "node scripts/create-admin.mjs",
     "create-user": "node scripts/create-user.mjs",
-    "cleanup-pii": "node scripts/cleanup-pii.mjs"
+    "cleanup-pii": "node scripts/cleanup-pii.mjs",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:push": "prisma db push",
+    "production:build": "prisma generate && prisma migrate deploy && next build"
   },
   "dependencies": {
     "@upstash/ratelimit": "^1.2.0",

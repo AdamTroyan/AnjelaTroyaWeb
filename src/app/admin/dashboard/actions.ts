@@ -6,11 +6,12 @@ import path from "node:path";
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserFromCookies } from "@/lib/auth";
 import { assertSameOriginFromHeaders } from "@/lib/csrf";
 import nodemailer from "nodemailer";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, escapeHtml } from "@/lib/format";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { generatePropertyId } from "@/lib/propertyId";
 import { appendAuditLog } from "@/lib/auditLog";
@@ -33,7 +34,7 @@ async function requireAdmin() {
 }
 
 const uploadsDir = path.join(process.cwd(), "public", "uploads");
-const MAX_IMAGE_BYTES = 100 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -77,7 +78,25 @@ function parseDetails(detailsValue: FormDataEntryValue | null) {
     return null;
   }
   try {
-    return JSON.parse(detailsValue);
+    const parsed = JSON.parse(detailsValue);
+    if (!Array.isArray(parsed)) return null;
+    // Validate and sanitize: only allow {label: string, value: string} entries
+    return parsed
+      .filter(
+        (item: unknown): item is { label: string; value: string } =>
+          typeof item === "object" &&
+          item !== null &&
+          typeof (item as Record<string, unknown>).label === "string" &&
+          (item as Record<string, unknown>).label !== "" &&
+          ((item as Record<string, unknown>).label as string).length <= 200 &&
+          typeof (item as Record<string, unknown>).value === "string" &&
+          ((item as Record<string, unknown>).value as string).length <= 500
+      )
+      .slice(0, 50) // cap array size
+      .map((item: { label: string; value: string }) => ({
+        label: item.label,
+        value: item.value,
+      }));
   } catch {
     return null;
   }
@@ -94,7 +113,14 @@ function getImageExtension(file: File) {
   return ".jpg";
 }
 
-function validateImageFile(file: File) {
+const IMAGE_MAGIC_BYTES: Record<string, number[]> = {
+  "image/jpeg": [0xFF, 0xD8, 0xFF],
+  "image/png": [0x89, 0x50, 0x4E, 0x47],
+  "image/gif": [0x47, 0x49, 0x46],
+  "image/webp": [0x52, 0x49, 0x46, 0x46],
+};
+
+async function validateImageFile(file: File) {
   if (!file.type && !ALLOWED_IMAGE_EXTS.has(path.extname(file.name || "").toLowerCase())) {
     throw new Error("Unsupported image type");
   }
@@ -103,6 +129,18 @@ function validateImageFile(file: File) {
   }
   if (file.size > MAX_IMAGE_BYTES) {
     throw new Error("Image is too large");
+  }
+
+  // Magic byte validation — verify file content matches claimed MIME type
+  const magic = IMAGE_MAGIC_BYTES[file.type];
+  if (magic) {
+    const buf = await file.arrayBuffer();
+    const header = new Uint8Array(buf, 0, magic.length);
+    for (let i = 0; i < magic.length; i++) {
+      if (header[i] !== magic[i]) {
+        throw new Error("File content does not match image type");
+      }
+    }
   }
 }
 
@@ -254,7 +292,7 @@ async function saveUploadedImages(files: File[]) {
       continue;
     }
     try {
-      validateImageFile(file);
+      await validateImageFile(file);
 
       if (r2Config) {
         const url = await uploadToR2(r2Config, file);
@@ -363,8 +401,10 @@ export async function createProperty(formData: FormData) {
   if (smtp) {
     const priceValueNumber = parseNumber(createdProperty.price);
     const roomsValueNumber = parseNumber(getDetailValue(details, "מספר חדרים"));
+    // Cap the number of alerts to avoid DoS
     const alerts = await prisma.propertyAlert.findMany({
       where: { type: createdProperty.type },
+      take: 500,
     });
     const matched = alerts.filter((alert) => {
       if (alert.minPrice !== null) {
@@ -399,56 +439,64 @@ export async function createProperty(formData: FormData) {
 
       const formattedPrice = formatPrice(createdProperty.price);
 
-      await Promise.all(
-        matched.map((alert) =>
-          transporter.sendMail({
-            from: smtp.from,
-            to: alert.email,
-            subject: `נכס חדש שמתאים לך: ${createdProperty.title}`,
-            text: [
-              `נכס: ${createdProperty.title}`,
-              `סוג: ${createdProperty.type === "SALE" ? "למכירה" : "להשכרה"}`,
-              `מחיר: ${formattedPrice}`,
-              propertyUrl ? `קישור: ${propertyUrl}` : "",
-              "",
-              "לא יישלחו הודעות שיווקיות שאינן קשורות להתראות.",
-              "ניתן לבטל את ההרשמה בכל עת באמצעות קישור הסרה בכל הודעת דוא\"ל.",
-              siteUrl
-                ? `הסרה מרשימת ההתראות: ${siteUrl.replace(/\/$/, "")}/api/alerts/unsubscribe?token=${alert.unsubscribeToken}`
-                : "",
-            ].filter(Boolean).join("\n"),
-            html: `
-              <div style="font-family:Arial,Helvetica,sans-serif;background:#f8fafc;padding:24px;">
-                <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;text-align:center;">
-                  <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
-                    <p style="margin:0;font-size:12px;color:#64748b;">ANJELA TROYA | נדל"ן ושמאות</p>
-                    <h1 style="margin:8px 0 0;font-size:18px;color:#0f172a;">נכס חדש שמתאים לך</h1>
-                  </div>
-                  <div style="padding:20px 24px;">
-                    <p style="margin:0 0 6px;color:#0f172a;font-size:16px;font-weight:600;">${createdProperty.title}</p>
-                    <p style="margin:0 0 12px;color:#64748b;font-size:13px;">${createdProperty.type === "SALE" ? "למכירה" : "להשכרה"}</p>
-                    <p style="margin:0 0 16px;color:#0f172a;font-size:18px;font-weight:700;">${formattedPrice}</p>
-                    ${
-                      propertyUrl
-                        ? `<a href="${propertyUrl}" style="display:inline-block;margin-top:4px;padding:10px 18px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:999px;font-size:13px;font-weight:600;">צפייה בנכס</a>`
-                        : ""
-                    }
-                  </div>
-                  <div style="padding:12px 24px;border-top:1px solid #e2e8f0;">
-                    <p style="margin:0;color:#94a3b8;font-size:11px;">הודעה אוטומטית מהאתר</p>
-                    <p style="margin:6px 0 0;color:#94a3b8;font-size:11px;">לא יישלחו הודעות שיווקיות שאינן קשורות להתראות.</p>
-                    <p style="margin:6px 0 0;color:#94a3b8;font-size:11px;">ניתן לבטל את ההרשמה בכל עת באמצעות קישור הסרה בכל הודעת דוא"ל.</p>
-                    ${
-                      siteUrl
-                        ? `<p style="margin:6px 0 0;color:#94a3b8;font-size:11px;"><a href="${siteUrl.replace(/\/$/, "")}/api/alerts/unsubscribe?token=${alert.unsubscribeToken}" style="color:#94a3b8;text-decoration:underline;">להסרה מרשימת ההתראות</a></p>`
-                        : ""
-                    }
+      // Batch email sending to avoid SMTP overload
+      const BATCH_SIZE = 20;
+      for (let i = 0; i < matched.length; i += BATCH_SIZE) {
+        const batch = matched.slice(i, i + BATCH_SIZE);
+        await Promise.all(
+          batch.map((alert) => {
+            const safeTitle = escapeHtml(createdProperty.title);
+            const safePrice = escapeHtml(formattedPrice);
+            return transporter.sendMail({
+              from: smtp.from,
+              to: alert.email,
+              subject: `נכס חדש שמתאים לך: ${safeTitle}`,
+              text: [
+                `נכס: ${safeTitle}`,
+                `סוג: ${createdProperty.type === "SALE" ? "למכירה" : "להשכרה"}`,
+                `מחיר: ${safePrice}`,
+                propertyUrl ? `קישור: ${propertyUrl}` : "",
+                "",
+                "לא יישלחו הודעות שיווקיות שאינן קשורות להתראות.",
+                "ניתן לבטל את ההרשמה בכל עת באמצעות קישור הסרה בכל הודעת דוא\"ל.",
+                siteUrl
+                  ? `הסרה מרשימת ההתראות: ${siteUrl.replace(/\/$/, "")}/api/alerts/unsubscribe?token=${alert.unsubscribeToken}`
+                  : "",
+              ].filter(Boolean).join("\n"),
+              html: `
+                <div style="font-family:Arial,Helvetica,sans-serif;background:#f8fafc;padding:24px;">
+                  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;text-align:center;">
+                    <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
+                      <p style="margin:0;font-size:12px;color:#64748b;">ANJELA TROYA | נדל"ן ושמאות</p>
+                      <h1 style="margin:8px 0 0;font-size:18px;color:#0f172a;">נכס חדש שמתאים לך</h1>
+                    </div>
+                    <div style="padding:20px 24px;">
+                      <p style="margin:0 0 6px;color:#0f172a;font-size:16px;font-weight:600;">${safeTitle}</p>
+                      <p style="margin:0 0 12px;color:#64748b;font-size:13px;">${createdProperty.type === "SALE" ? "למכירה" : "להשכרה"}</p>
+                      <p style="margin:0 0 16px;color:#0f172a;font-size:18px;font-weight:700;">${safePrice}</p>
+                      ${
+                        propertyUrl
+                          ? `<a href="${propertyUrl}" style="display:inline-block;margin-top:4px;padding:10px 18px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:999px;font-size:13px;font-weight:600;">צפייה בנכס</a>`
+                          : ""
+                      }
+                    </div>
+                    <div style="padding:12px 24px;border-top:1px solid #e2e8f0;">
+                      <p style="margin:0;color:#94a3b8;font-size:11px;">הודעה אוטומטית מהאתר</p>
+                      <p style="margin:6px 0 0;color:#94a3b8;font-size:11px;">לא יישלחו הודעות שיווקיות שאינן קשורות להתראות.</p>
+                      <p style="margin:6px 0 0;color:#94a3b8;font-size:11px;">ניתן לבטל את ההרשמה בכל עת באמצעות קישור הסרה בכל הודעת דוא"ל.</p>
+                      ${
+                        siteUrl
+                          ? `<p style="margin:6px 0 0;color:#94a3b8;font-size:11px;"><a href="${siteUrl.replace(/\/$/, "")}/api/alerts/unsubscribe?token=${alert.unsubscribeToken}" style="color:#94a3b8;text-decoration:underline;">להסרה מרשימת ההתראות</a></p>`
+                          : ""
+                      }
+                    </div>
                   </div>
                 </div>
-              </div>`,
+              `,
+            });
           })
-        )
-      );
+        );
+      }
     }
   }
 
@@ -557,10 +605,15 @@ export async function updateProperty(formData: FormData) {
   const status = typeof statusValue === "string" ? statusValue : property.status;
   const address = typeof addressValue === "string" ? addressValue.trim() : property.address ?? "";
   const isActive = formData.get("isActive") === "on";
-  const details = parseDetails(detailsValue) ?? property.details ?? null;
+  const detailsParsed = parseDetails(detailsValue) ?? property.details ?? null;
+  const details = detailsParsed === null ? Prisma.JsonNull : detailsParsed;
 
+  // Only allow keepImages values that exist in property.imageUrls to prevent path traversal
   const keepImages = keepImagesValues.filter(
-    (value): value is string => typeof value === "string" && value.length > 0
+    (value): value is string =>
+      typeof value === "string" &&
+      value.length > 0 &&
+      property.imageUrls.includes(value)
   );
   const removedImages = property.imageUrls.filter((url) => !keepImages.includes(url));
   await removeUploads(removedImages);

@@ -24,9 +24,24 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const id = typeof body?.id === "string" ? body.id : "";
   const email = typeof body?.email === "string" ? body.email.trim() : "";
+  const unsubscribeToken = typeof body?.unsubscribeToken === "string" ? body.unsubscribeToken.trim() : "";
 
-  if (!id || !email || !isValidEmail(email)) {
+  if (!id || !email || !isValidEmail(email) || email.length > 254) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Require a valid unsubscribeToken belonging to this email to authorize deletion
+  if (!unsubscribeToken) {
+    return Response.json({ error: "Missing authorization token" }, { status: 403 });
+  }
+
+  const tokenOwner = await prisma.propertyAlert.findUnique({
+    where: { unsubscribeToken },
+    select: { email: true },
+  });
+
+  if (!tokenOwner || tokenOwner.email !== email) {
+    return Response.json({ error: "Invalid authorization" }, { status: 403 });
   }
 
   await prisma.propertyAlert.deleteMany({

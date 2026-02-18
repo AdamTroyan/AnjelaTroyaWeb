@@ -6,6 +6,15 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function getSmtpConfigSafe() {
   const host = process.env.SMTP_HOST;
   const port = process.env.SMTP_PORT ? Number.parseInt(process.env.SMTP_PORT, 10) : NaN;
@@ -68,40 +77,49 @@ export async function POST(request: Request) {
 
   const smtp = getSmtpConfigSafe();
   if (smtp) {
-    const transporter = nodemailer.createTransport({
-      host: smtp.host,
-      port: smtp.port,
-      secure: smtp.secure,
-      auth: { user: smtp.user, pass: smtp.pass },
-    });
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtp.host,
+        port: smtp.port,
+        secure: smtp.secure,
+        auth: { user: smtp.user, pass: smtp.pass },
+      });
 
-    await transporter.sendMail({
-      from: smtp.from,
-      to: smtp.to,
-      subject: "פנייה חדשה מהאתר",
-      text: [
-        `שם: ${name}`,
-        `טלפון: ${phone}`,
-        `אימייל: ${email || "ללא"}`,
-        "",
-        details,
-      ].join("\n"),
-      html: `
-        <div style="font-family:Arial,Helvetica,sans-serif;background:#f8fafc;padding:24px;">
-          <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
-            <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
-              <p style="margin:0;font-size:12px;color:#64748b;">ANJELA TROYA | נדל"ן ושמאות</p>
-              <h1 style="margin:8px 0 0;font-size:18px;color:#0f172a;">פנייה חדשה מהאתר</h1>
+      const isOwnerLead = details.includes("מקור: עמוד מעוניין למכור/להשכיר");
+      const subject = isOwnerLead
+        ? `בעל נכס חדש: ${name} – ${details.includes("מכירה") ? "מכירה" : "השכרה"}`
+        : `פנייה חדשה מהאתר: ${name}`;
+
+      await transporter.sendMail({
+        from: smtp.from,
+        to: smtp.to,
+        subject,
+        text: [
+          `שם: ${name}`,
+          `טלפון: ${phone}`,
+          `אימייל: ${email || "ללא"}`,
+          "",
+          details,
+        ].join("\n"),
+        html: `
+          <div style="font-family:Arial,Helvetica,sans-serif;background:#f8fafc;padding:24px;">
+            <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
+              <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
+                <p style="margin:0;font-size:12px;color:#64748b;">ANJELA TROYA | נדל"ן ושמאות</p>
+                <h1 style="margin:8px 0 0;font-size:18px;color:#0f172a;">${escapeHtml(subject)}</h1>
+              </div>
+              <div style="padding:20px 24px;">
+                <p style="margin:0 0 6px;color:#0f172a;font-size:14px;font-weight:600;">שם: ${escapeHtml(name)}</p>
+                <p style="margin:0 0 6px;color:#0f172a;font-size:14px;">טלפון: <a href="tel:${escapeHtml(phone)}" style="color:#0f172a;">${escapeHtml(phone)}</a></p>
+                <p style="margin:0 0 12px;color:#0f172a;font-size:14px;">אימייל: ${escapeHtml(email || "ללא")}</p>
+                <p style="margin:0;color:#475569;font-size:13px;white-space:pre-line;">${escapeHtml(details)}</p>
+              </div>
             </div>
-            <div style="padding:20px 24px;">
-              <p style="margin:0 0 6px;color:#0f172a;font-size:14px;font-weight:600;">שם: ${name}</p>
-              <p style="margin:0 0 6px;color:#0f172a;font-size:14px;">טלפון: ${phone}</p>
-              <p style="margin:0 0 12px;color:#0f172a;font-size:14px;">אימייל: ${email || "ללא"}</p>
-              <p style="margin:0;color:#475569;font-size:13px;white-space:pre-line;">${details.replace(/</g, "&lt;")}</p>
-            </div>
-          </div>
-        </div>`,
-    });
+          </div>`,
+      });
+    } catch (err) {
+      console.error("[contact] Failed to send email:", err);
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -14,7 +14,7 @@ export async function verifyTurnstile(token: string, ip?: string | null) {
   }
 
   if (!token) {
-    return false;
+    return process.env.NODE_ENV !== "production";
   }
 
   const body = new FormData();

@@ -139,6 +139,20 @@ enum PropertyStatus {
   RENTED
 }
 
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actorEmail String
+  action     String
+  ip         String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}
+
 enum UserRole {
   ADMIN
   EDITOR

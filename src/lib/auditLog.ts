@@ -1,5 +1,4 @@
-import { mkdir, readFile, appendFile } from "node:fs/promises";
-import path from "node:path";
+import { prisma } from "@/lib/prisma";
 
 export type AuditLogEntry = {
   ts: string;
@@ -10,24 +9,30 @@ export type AuditLogEntry = {
   metadata?: Record<string, unknown>;
 };
 
-const logDir = path.join(process.cwd(), "data");
-const logPath = path.join(logDir, "auditlog.jsonl");
-
 export async function appendAuditLog(entry: AuditLogEntry) {
-  await mkdir(logDir, { recursive: true });
-  await appendFile(logPath, `${JSON.stringify(entry)}\n`, "utf8");
+  await prisma.auditLog.create({
+    data: {
+      actorId: entry.actorId,
+      actorEmail: entry.actorEmail,
+      action: entry.action,
+      ip: entry.ip,
+      metadata: entry.metadata ? (entry.metadata as object) : undefined,
+    },
+  });
 }
 
 export async function readAuditLog(limit = 500) {
-  try {
-    const raw = await readFile(logPath, "utf8");
-    const lines = raw.split("\n").filter(Boolean);
-    const entries = lines
-      .slice(-limit)
-      .map((line) => JSON.parse(line) as AuditLogEntry)
-      .reverse();
-    return entries;
-  } catch (error) {
-    return [] as AuditLogEntry[];
-  }
+  const entries = await prisma.auditLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+
+  return entries.map((e) => ({
+    ts: e.createdAt.toISOString(),
+    actorId: e.actorId,
+    actorEmail: e.actorEmail,
+    action: e.action,
+    ip: e.ip,
+    metadata: (e.metadata as Record<string, unknown>) ?? undefined,
+  })) as AuditLogEntry[];
 }

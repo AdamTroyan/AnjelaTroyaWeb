@@ -27,13 +27,10 @@ const PUBLIC_PATHS = new Set([
 ]);
 
 function buildCsp() {
-  const scriptSrc = "script-src 'self' 'unsafe-inline'";
-
   return [
     "default-src 'self'",
     "object-src 'none'",
-    scriptSrc,
-    "script-src-attr 'unsafe-inline'",
+    "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
@@ -88,8 +85,16 @@ async function verifyJwt(token: string, secret: string): Promise<JwtPayload | nu
     new TextEncoder().encode(data)
   );
 
-  const expected = base64urlEncodeBytes(new Uint8Array(signature));
-  if (expected !== signaturePart) {
+  const expectedBytes = new Uint8Array(signature);
+  const actualBytes = base64urlDecodeToBytes(signaturePart);
+  if (expectedBytes.length !== actualBytes.length) {
+    return null;
+  }
+  let mismatch = 0;
+  for (let i = 0; i < expectedBytes.length; i++) {
+    mismatch |= expectedBytes[i] ^ actualBytes[i];
+  }
+  if (mismatch !== 0) {
     return null;
   }
 
@@ -117,13 +122,33 @@ export async function proxy(request: NextRequest) {
 
     if (
       pathname.startsWith("/_next/") ||
-      pathname.startsWith("/uploads/") ||
       pathname === "/favicon.ico"
     ) {
       return NextResponse.next();
     }
 
+    if (pathname.startsWith("/uploads/")) {
+      const response = NextResponse.next();
+      response.headers.set("X-Content-Type-Options", "nosniff");
+      response.headers.set("Content-Security-Policy", "default-src 'none'");
+      response.headers.set("Content-Disposition", "inline");
+      return response;
+    }
+
     if (PUBLIC_PATHS.has(pathname)) {
+      return NextResponse.next();
+    }
+
+    const isProtected = isAdminRoute || pathname === "/admin/dashboard";
+
+    if (!isProtected && !isApiRoute) {
+      const csp = buildCsp();
+      const response = NextResponse.next();
+      response.headers.set("Content-Security-Policy", csp);
+      return response;
+    }
+
+    if (!isProtected) {
       return NextResponse.next();
     }
 

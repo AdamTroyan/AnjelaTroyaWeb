@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
   images: imagePatterns.length > 0 ? { remotePatterns: imagePatterns } : undefined,
   experimental: {
     serverActions: {
-      bodySizeLimit: "50mb",
+      bodySizeLimit: "12mb",
     },
   },
   async headers() {

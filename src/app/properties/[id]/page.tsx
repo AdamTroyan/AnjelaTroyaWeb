@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies as getCookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/format";
 import { getSiteUrl } from "@/lib/siteUrl";
@@ -8,7 +9,6 @@ import ImageLightbox from "./ImageLightbox";
 import PropertyShareActions from "./PropertyShareActions";
 import { createPropertyInquiry } from "./actions";
 import FavoriteToggle from "../FavoriteToggle";
-import TurnstileField from "@/components/TurnstileField";
 
 export const runtime = "nodejs";
 
@@ -51,10 +51,22 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
     notFound();
   }
 
-  await prisma.property.update({
-    where: { id: property.id },
-    data: { viewCount: { increment: 1 } },
-  });
+  // Deduplicate view counting per session via cookie
+  const cookieStore = await getCookies();
+  const viewedKey = `viewed_${property.id}`;
+  const alreadyViewed = cookieStore.get(viewedKey)?.value === "1";
+  if (!alreadyViewed) {
+    await prisma.property.update({
+      where: { id: property.id },
+      data: { viewCount: { increment: 1 } },
+    });
+    cookieStore.set(viewedKey, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60, // 1 hour dedup window
+      path: `/properties/${property.id}`,
+    });
+  }
 
   const whatsappMessage = `שלום, אשמח לקבל פרטים לגבי הנכס: ${property.title}`;
   const whatsappUrl = `https://wa.me/972543179762?text=${encodeURIComponent(
@@ -267,7 +279,6 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
               placeholder="על מה תרצה לדעת?"
               required
             />
-            <TurnstileField className="mt-2" name="turnstileToken" />
             <button
               className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
               type="submit"

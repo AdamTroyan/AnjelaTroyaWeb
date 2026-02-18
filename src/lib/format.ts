@@ -1,3 +1,16 @@
+// Escapes HTML special characters to prevent XSS
+export function escapeHtml(str: string): string {
+  return str.replace(/[&<>"']/g, (c) => {
+    switch (c) {
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case '"': return "&quot;";
+      case "'": return "&#39;";
+      default: return c;
+    }
+  });
+}
 export function formatPrice(value: string) {
   const normalized = value.replace(/[^0-9.]/g, "");
   const parsed = Number(normalized);

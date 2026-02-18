@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { assertSameOriginFromRequest } from "@/lib/csrf";
-import { verifyTurnstile } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 
@@ -33,7 +32,6 @@ export async function POST(request: Request) {
     message?: string;
     rating?: number;
     hideLastName?: boolean;
-    turnstileToken?: string;
   } | null;
 
   const firstName = body?.firstName?.trim() ?? "";
@@ -41,7 +39,6 @@ export async function POST(request: Request) {
   const message = body?.message?.trim() ?? "";
   const rating = Number(body?.rating);
   const hideLastName = Boolean(body?.hideLastName);
-  const turnstileToken = body?.turnstileToken ?? "";
 
   if (!firstName || !lastName || !message) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -60,10 +57,6 @@ export async function POST(request: Request) {
   }
 
   const ip = getClientIp(request);
-  const turnstileOk = await verifyTurnstile(turnstileToken, ip);
-  if (!turnstileOk) {
-    return NextResponse.json({ error: "Captcha failed" }, { status: 400 });
-  }
 
   await prisma.testimonial.create({
     data: {

@@ -18,5 +18,5 @@ function normalizeSiteUrl(value?: string) {
 }
 
 export function getSiteUrl() {
-  return "https://anjelatroya.co.il";
+  return normalizeSiteUrl(process.env.SITE_URL) || "https://anjelatroya.co.il";
 }

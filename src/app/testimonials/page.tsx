@@ -29,9 +29,18 @@ function getStats(items: TestimonialItem[]) {
 }
 
 export default async function TestimonialsPage() {
-  const testimonials = (await prisma.testimonial.findMany({
+  const testimonials = await prisma.testimonial.findMany({
     orderBy: [{ rating: "desc" }, { createdAt: "desc" }],
-  })) as TestimonialItem[];
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      hideLastName: true,
+      message: true,
+      rating: true,
+      createdAt: true,
+    },
+  });
   const stats = getStats(testimonials);
 
   return (

@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { assertSameOriginFromRequest } from "@/lib/csrf";
-import { verifyTurnstile } from "@/lib/turnstile";
 
 function parseNumber(value: unknown) {
   if (typeof value !== "number" && typeof value !== "string") {
@@ -38,18 +37,19 @@ export async function POST(request: Request) {
   const maxPrice = parseNumber(body?.maxPrice);
   const minRooms = parseNumber(body?.minRooms);
   const consentSource = typeof body?.consentSource === "string" ? body.consentSource.trim() : "";
-  const turnstileToken = typeof body?.turnstileToken === "string" ? body.turnstileToken : "";
 
-  if (!email || !isValidEmail(email) || !type) {
+  if (!email || !isValidEmail(email) || !type || email.length > 254 || consentSource.length > 200) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // Per-email alert limit to prevent email bombing
+  const existingCount = await prisma.propertyAlert.count({ where: { email } });
+  if (existingCount >= 5) {
+    return Response.json({ error: "Too many alerts for this email" }, { status: 400 });
   }
 
   const userAgent = request.headers.get("user-agent") || null;
   const consentIp = clientIp || null;
-  const turnstileOk = await verifyTurnstile(turnstileToken, clientIp);
-  if (!turnstileOk) {
-    return Response.json({ error: "Captcha failed" }, { status: 400 });
-  }
 
   const alert = await prisma.propertyAlert.create({
     data: {
@@ -63,7 +63,8 @@ export async function POST(request: Request) {
       consentUserAgent: userAgent,
       consentSource: consentSource || "alerts-form",
     },
+    select: { id: true, unsubscribeToken: true },
   });
 
-  return Response.json({ id: alert.id });
+  return Response.json({ id: alert.id, unsubscribeToken: alert.unsubscribeToken });
 }

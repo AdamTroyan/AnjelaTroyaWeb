@@ -7,7 +7,6 @@ import nodemailer from "nodemailer";
 import { assertSameOriginFromHeaders } from "@/lib/csrf";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { checkRateLimit, getClientIpFromHeaders } from "@/lib/rateLimit";
-import { verifyTurnstile } from "@/lib/turnstile";
 
 function getSmtpConfig() {
   const host = process.env.SMTP_HOST;
@@ -83,14 +82,12 @@ export async function createPropertyInquiry(formData: FormData) {
   const phoneValue = formData.get("phone");
   const emailValue = formData.get("email");
   const messageValue = formData.get("message");
-  const turnstileValue = formData.get("turnstileToken");
 
   const propertyId = typeof propertyIdValue === "string" ? propertyIdValue : "";
   const name = typeof nameValue === "string" ? nameValue.trim() : "";
   const phone = typeof phoneValue === "string" ? phoneValue.trim() : "";
   const email = typeof emailValue === "string" ? emailValue.trim() : "";
   const message = typeof messageValue === "string" ? messageValue.trim() : "";
-  const turnstileToken = typeof turnstileValue === "string" ? turnstileValue : "";
 
   if (name.length > 120 || phone.length > 40 || email.length > 254 || message.length > 2000) {
     throw new Error("Invalid input");
@@ -98,11 +95,6 @@ export async function createPropertyInquiry(formData: FormData) {
 
   if (!propertyId || !name || !phone || !message) {
     throw new Error("Missing required fields");
-  }
-
-  const turnstileOk = await verifyTurnstile(turnstileToken, clientIp);
-  if (!turnstileOk) {
-    throw new Error("Captcha failed");
   }
 
   const property = await prisma.property.findUnique({

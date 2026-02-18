@@ -3,7 +3,6 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import TurnstileField from "@/components/TurnstileField";
 
 const defaultRating = 5;
 
@@ -16,8 +15,6 @@ export default function TestimonialsForm() {
   const [rating, setRating] = useState(defaultRating);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [error, setError] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState("");
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus("sending");
@@ -32,7 +29,6 @@ export default function TestimonialsForm() {
         message,
         rating,
         hideLastName,
-        turnstileToken,
       }),
     });
 
@@ -120,8 +116,6 @@ export default function TestimonialsForm() {
         />
         להסתיר את שם המשפחה בפרסום ההמלצה
       </label>
-
-      <TurnstileField className="mt-2" onToken={setTurnstileToken} />
 
       {status === "error" ? (
         <p className="text-sm font-semibold text-rose-600" aria-live="polite">

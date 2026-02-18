@@ -18,7 +18,8 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const ids = Array.isArray(body?.ids) ? body.ids.filter((id: unknown) => typeof id === "string") : [];
+  const rawIds = Array.isArray(body?.ids) ? body.ids.filter((id: unknown) => typeof id === "string") : [];
+  const ids = rawIds.slice(0, 100) as string[];
 
   if (ids.length === 0) {
     return Response.json({ properties: [] });

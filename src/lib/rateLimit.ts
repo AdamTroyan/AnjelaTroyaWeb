@@ -83,6 +83,10 @@ export async function checkRateLimit(
     return { ok: false, retryAfter };
   }
 
+  if (process.env.NODE_ENV === "production") {
+    console.warn("[rateLimit] Upstash Redis not configured — using in-memory fallback (unreliable in serverless)");
+  }
+
   const now = Date.now();
   const entry = store.get(key);
   if (!entry || entry.resetAt <= now) {
