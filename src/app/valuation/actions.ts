@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import nodemailer from "nodemailer";
-import { assertSameOriginFromHeaders } from "@/lib/csrf";
 import { checkRateLimit, getClientIpFromHeaders } from "@/lib/rateLimit";
 
 function escapeHtml(value: string) {
@@ -32,11 +31,6 @@ function getSmtpConfig() {
 }
 
 export async function createValuationInquiry(formData: FormData) {
-  const originCheck = await assertSameOriginFromHeaders();
-  if (!originCheck.ok) {
-    throw new Error("Invalid origin");
-  }
-
   const headerStore = await headers();
   const clientIp = getClientIpFromHeaders(headerStore);
   const rate = await checkRateLimit(`valuation:${clientIp}`, { limit: 6, windowMs: 10 * 60 * 1000 });

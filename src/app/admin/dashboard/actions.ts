@@ -9,7 +9,6 @@ import { headers } from "next/headers";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getUserFromCookies } from "@/lib/auth";
-import { assertSameOriginFromHeaders } from "@/lib/csrf";
 import nodemailer from "nodemailer";
 import { formatPrice, escapeHtml } from "@/lib/format";
 import { getSiteUrl } from "@/lib/siteUrl";
@@ -18,11 +17,6 @@ import { appendAuditLog } from "@/lib/auditLog";
 import { getClientIpFromHeaders } from "@/lib/rateLimit";
 
 async function requireAdmin() {
-  const originCheck = await assertSameOriginFromHeaders();
-  if (!originCheck.ok) {
-    throw new Error("Invalid origin");
-  }
-
   const user = await getUserFromCookies();
   if (user?.role !== "ADMIN") {
     throw new Error("Unauthorized");

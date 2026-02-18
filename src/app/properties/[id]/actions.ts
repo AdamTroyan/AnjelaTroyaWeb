@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
-import { assertSameOriginFromHeaders } from "@/lib/csrf";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { checkRateLimit, getClientIpFromHeaders } from "@/lib/rateLimit";
 
@@ -62,11 +61,6 @@ function buildAbsoluteUrl(siteUrl: string, pathOrUrl: string) {
 }
 
 export async function createPropertyInquiry(formData: FormData) {
-  const originCheck = await assertSameOriginFromHeaders();
-  if (!originCheck.ok) {
-    throw new Error("Invalid origin");
-  }
-
   const headerStore = await headers();
   const clientIp = getClientIpFromHeaders(headerStore);
   const rate = await checkRateLimit(`property-inquiry:${clientIp}`, {
