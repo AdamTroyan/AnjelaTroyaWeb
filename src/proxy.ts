@@ -116,6 +116,8 @@ export async function proxy(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl;
     const isApiRoute = pathname.startsWith("/api/");
+    const isAdminApiRoute = pathname.startsWith("/api/admin/");
+    const isAdminPageRoute = pathname.startsWith("/admin/") && pathname !== "/admin";
 
     // Allow Next.js internal routes and favicon
     if (
@@ -141,7 +143,12 @@ export async function proxy(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // For all other routes, check authentication
+    // Allow all non-admin API routes (contact forms, public data, etc.)
+    if (isApiRoute && !isAdminApiRoute) {
+      return NextResponse.next();
+    }
+
+    // For protected routes (pages + admin APIs), check authentication
     const secret = process.env.AUTH_SECRET;
     const token = request.cookies.get(COOKIE_NAME)?.value;
     const payload = token && secret ? await verifyJwt(token, secret) : null;
@@ -158,8 +165,10 @@ export async function proxy(request: NextRequest) {
     }
 
     // Check admin role for admin routes
-    const isAdminRoute = pathname.startsWith("/admin") && pathname !== "/admin";
-    if (isAdminRoute && payload.role !== "ADMIN") {
+    if ((isAdminPageRoute || isAdminApiRoute) && payload.role !== "ADMIN") {
+      if (isApiRoute) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
       return NextResponse.redirect(new URL("/", request.url));
     }
 
@@ -175,6 +184,9 @@ export async function proxy(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("Proxy error:", error);
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
     return NextResponse.redirect(new URL("/login", request.url));
   }
 }
