@@ -10,13 +10,14 @@ const COOKIE_NAME =
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow access to login/logout pages and auth API
+  // Allow access to public routes
   if (
     pathname === "/login" ||
-    pathname.startsWith("/api/auth/login") ||
-    pathname.startsWith("/api/auth/logout") ||
+    pathname.startsWith("/api/") ||  // Allow all API routes
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon.ico")
+    pathname.startsWith("/favicon.ico") ||
+    pathname.startsWith("/robots.txt") ||
+    pathname.startsWith("/sitemap")
   ) {
     return NextResponse.next();
   }
