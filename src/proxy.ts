@@ -17,13 +17,12 @@ const USE_HTTPS = process.env.SITE_URL?.startsWith("https://") ?? false;
 const COOKIE_NAME = USE_HTTPS ? "__Host-admin_token" : "admin_token";
 
 const PUBLIC_PATHS = new Set([
-  "/admin",
-  "/admin/unblock",
   "/login",
-  "/unsubscribe",
   "/api/auth/login",
   "/api/auth/logout",
   "/api/alerts/unsubscribe",
+  "/admin/unblock",
+  "/unsubscribe",
 ]);
 
 function buildCsp() {
@@ -118,15 +117,18 @@ export async function proxy(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl;
     const isApiRoute = pathname.startsWith("/api/");
-    const isAdminRoute = pathname.startsWith("/admin") && pathname !== "/admin";
 
+    // Allow Next.js internal routes and favicon
     if (
       pathname.startsWith("/_next/") ||
-      pathname === "/favicon.ico"
+      pathname === "/favicon.ico" ||
+      pathname.startsWith("/robots.txt") ||
+      pathname.startsWith("/sitemap")
     ) {
       return NextResponse.next();
     }
 
+    // Special handling for uploads
     if (pathname.startsWith("/uploads/")) {
       const response = NextResponse.next();
       response.headers.set("X-Content-Type-Options", "nosniff");
@@ -135,44 +137,37 @@ export async function proxy(request: NextRequest) {
       return response;
     }
 
+    // Allow public paths without authentication
     if (PUBLIC_PATHS.has(pathname)) {
       return NextResponse.next();
     }
 
-    const isProtected = isAdminRoute || pathname === "/admin/dashboard";
-
-    if (!isProtected && !isApiRoute) {
-      const csp = buildCsp();
-      const response = NextResponse.next();
-      response.headers.set("Content-Security-Policy", csp);
-      return response;
-    }
-
-    if (!isProtected) {
-      return NextResponse.next();
-    }
-
+    // For all other routes, check authentication
     const secret = process.env.AUTH_SECRET;
     const token = request.cookies.get(COOKIE_NAME)?.value;
     const payload = token && secret ? await verifyJwt(token, secret) : null;
 
+    // If not authenticated
     if (!payload) {
       if (isApiRoute) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
-      return NextResponse.redirect(new URL("/login", request.url));
+      // Redirect to login with the attempted path
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
     }
 
+    // Check admin role for admin routes
+    const isAdminRoute = pathname.startsWith("/admin") && pathname !== "/admin";
     if (isAdminRoute && payload.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
+    // User is authenticated, apply CSP and allow access
     const csp = buildCsp();
-
     const response = NextResponse.next();
-
     response.headers.set("Content-Security-Policy", csp);
-
     return response;
   } catch {
     return NextResponse.redirect(new URL("/login", request.url));
