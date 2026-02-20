@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { cookies as getCookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
-const TOKEN_TTL_SECONDS = 60 * 30; // 30 minutes
+const TOKEN_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 const USE_HTTPS = process.env.SITE_URL?.startsWith("https://") ?? false;
 export const COOKIE_NAME = USE_HTTPS ? "__Host-admin_token" : "admin_token";
 const JWT_ISSUER = "anjelaweb";

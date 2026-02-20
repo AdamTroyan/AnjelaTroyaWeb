@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { assertSameOriginFromRequest } from "@/lib/csrf";
+import { verifyTurnstile } from "@/lib/turnstile";
 import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
 
@@ -51,7 +52,13 @@ export async function POST(request: Request) {
     phone?: string;
     email?: string;
     details?: string;
+    turnstileToken?: string;
   };
+
+  const turnstileOk = await verifyTurnstile(body.turnstileToken ?? "", clientIp);
+  if (!turnstileOk) {
+    return NextResponse.json({ error: "Turnstile verification failed" }, { status: 403 });
+  }
 
   const name = body.name?.trim() ?? "";
   const phone = body.phone?.trim() ?? "";

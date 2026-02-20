@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "972543179762";
 const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || "+972543179762";
@@ -17,6 +18,7 @@ export default function OwnerLeadCard() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,6 +45,7 @@ export default function OwnerLeadCard() {
           phone: phone.trim(),
           email: email.trim() || null,
           details,
+          turnstileToken,
         }),
       });
 
@@ -172,6 +175,7 @@ export default function OwnerLeadCard() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
+        <TurnstileWidget onVerify={setTurnstileToken} />
         <button
           className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
           type="submit"

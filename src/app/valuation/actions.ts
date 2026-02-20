@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import nodemailer from "nodemailer";
 import { checkRateLimit, getClientIpFromHeaders } from "@/lib/rateLimit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 function escapeHtml(value: string) {
   return value
@@ -33,6 +34,13 @@ function getSmtpConfig() {
 export async function createValuationInquiry(formData: FormData) {
   const headerStore = await headers();
   const clientIp = getClientIpFromHeaders(headerStore);
+
+  const turnstileToken = formData.get("cf-turnstile-response");
+  const turnstileOk = await verifyTurnstile(typeof turnstileToken === "string" ? turnstileToken : "", clientIp);
+  if (!turnstileOk) {
+    throw new Error("Turnstile verification failed");
+  }
+
   const rate = await checkRateLimit(`valuation:${clientIp}`, { limit: 6, windowMs: 10 * 60 * 1000 });
   if (!rate.ok) {
     throw new Error("Too many requests");

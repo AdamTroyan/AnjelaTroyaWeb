@@ -8,6 +8,7 @@ import ImageLightbox from "./ImageLightbox";
 import PropertyShareActions from "./PropertyShareActions";
 import { createPropertyInquiry } from "./actions";
 import FavoriteToggle from "../FavoriteToggle";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 export const runtime = "nodejs";
 
@@ -268,6 +269,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
               placeholder="על מה תרצה לדעת?"
               required
             />
+            <TurnstileWidget />
             <button
               className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
               type="submit"

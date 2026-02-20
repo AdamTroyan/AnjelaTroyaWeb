@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { checkRateLimit, getClientIpFromHeaders } from "@/lib/rateLimit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 function getSmtpConfig() {
   const host = process.env.SMTP_HOST;
@@ -63,6 +64,13 @@ function buildAbsoluteUrl(siteUrl: string, pathOrUrl: string) {
 export async function createPropertyInquiry(formData: FormData) {
   const headerStore = await headers();
   const clientIp = getClientIpFromHeaders(headerStore);
+
+  const turnstileToken = formData.get("cf-turnstile-response");
+  const turnstileOk = await verifyTurnstile(typeof turnstileToken === "string" ? turnstileToken : "", clientIp);
+  if (!turnstileOk) {
+    throw new Error("Turnstile verification failed");
+  }
+
   const rate = await checkRateLimit(`property-inquiry:${clientIp}`, {
     limit: 8,
     windowMs: 10 * 60 * 1000,
@@ -107,7 +115,7 @@ export async function createPropertyInquiry(formData: FormData) {
     throw new Error("Property not found");
   }
 
-  
+
   await prisma.propertyInquiry.create({
     data: {
       propertyId,

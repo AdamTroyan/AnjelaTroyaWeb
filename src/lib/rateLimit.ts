@@ -25,6 +25,24 @@ declare global {
 const store: RateLimitStore = globalThis.__rateLimitStore ?? new Map();
 globalThis.__rateLimitStore = store;
 
+/* ── Periodic cleanup of expired entries (every 60 s) ── */
+declare global {
+  // eslint-disable-next-line no-var
+  var __rateLimitCleanupTimer: ReturnType<typeof setInterval> | undefined;
+}
+if (!globalThis.__rateLimitCleanupTimer) {
+  globalThis.__rateLimitCleanupTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [k, v] of store) {
+      if (v.resetAt <= now) store.delete(k);
+    }
+  }, 60_000);
+  // Allow Node to exit without waiting for this timer
+  if (globalThis.__rateLimitCleanupTimer && typeof globalThis.__rateLimitCleanupTimer === "object" && "unref" in globalThis.__rateLimitCleanupTimer) {
+    globalThis.__rateLimitCleanupTimer.unref();
+  }
+}
+
 const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
 const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -83,8 +101,9 @@ export async function checkRateLimit(
     return { ok: false, retryAfter };
   }
 
-  if (process.env.NODE_ENV === "production") {
-    console.warn("[rateLimit] Upstash Redis not configured — using in-memory fallback (unreliable in serverless)");
+  // In-memory fallback — fine for long-lived processes (VPS / PM2), not for serverless
+  if (process.env.VERCEL || process.env.NETLIFY) {
+    console.warn("[rateLimit] Upstash Redis not configured — in-memory fallback is unreliable in serverless");
   }
 
   const now = Date.now();

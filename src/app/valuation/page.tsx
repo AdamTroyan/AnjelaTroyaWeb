@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createValuationInquiry } from "./actions";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 export const runtime = "nodejs";
 
@@ -108,6 +109,7 @@ export default async function ValuationPage({ searchParams }: ValuationPageProps
             name="notes"
             placeholder="פרטים נוספים שחשוב לדעת"
           />
+          <TurnstileWidget />
           <button
             className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
             type="submit"
