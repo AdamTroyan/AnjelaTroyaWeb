@@ -4,11 +4,12 @@ import { createValuationInquiry } from "./actions";
 export const runtime = "nodejs";
 
 type ValuationPageProps = {
-  searchParams?: { sent?: string };
+  searchParams?: Promise<{ sent?: string }>;
 };
 
-export default function ValuationPage({ searchParams }: ValuationPageProps) {
-  const sent = searchParams?.sent === "1";
+export default async function ValuationPage({ searchParams }: ValuationPageProps) {
+  const params = await searchParams;
+  const sent = params?.sent === "1";
 
   return (
     <section className="mx-auto w-full max-w-5xl px-6 py-16">

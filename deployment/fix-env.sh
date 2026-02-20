@@ -6,7 +6,7 @@
 echo "Fixing .env.production on server..."
 
 # Backup current .env.production
-cp .env.production .env.production.backup.$(date +%Y%m%d_%H%M%S)
+cp .env .env.backup.$(date +%Y%m%d_%H%M%S)
 
 # Remove channel_binding=require from DATABASE_URL
 sed -i 's/channel_binding=require&//g' .env.production
