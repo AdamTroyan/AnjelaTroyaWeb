@@ -107,6 +107,7 @@ export async function createPropertyInquiry(formData: FormData) {
     throw new Error("Property not found");
   }
 
+  
   await prisma.propertyInquiry.create({
     data: {
       propertyId,
