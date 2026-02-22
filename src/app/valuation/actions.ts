@@ -116,7 +116,7 @@ export async function createValuationInquiry(formData: FormData) {
   <div style="font-family:Arial,Helvetica,sans-serif;background:#f8fafc;padding:24px;">
     <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
       <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;">
-        <p style="margin:0;font-size:12px;color:#64748b;">ANJELA TROYA | נדל"ן ושמאות</p>
+        <p style="margin:0;font-size:12px;color:#64748b;">ANJELA TROYA | תיווך נדל"ן באשקלון</p>
         <h1 style="margin:8px 0 0;font-size:18px;color:#0f172a;">בקשת הערכת שווי</h1>
       </div>
       <div style="padding:20px 24px;">
