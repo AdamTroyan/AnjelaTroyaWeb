@@ -34,9 +34,24 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const isHttps = process.env.SITE_URL?.startsWith("https://");
+    const csp = [
+      "default-src 'self'",
+      "object-src 'none'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://nominatim.openstreetmap.org https://challenges.cloudflare.com",
+      "frame-src https://www.google.com https://maps.google.com https://challenges.cloudflare.com",
+      "base-uri 'self'",
+      "frame-ancestors 'self'",
+    ].join("; ");
+
     const baseHeaders = [
+      { key: "Content-Security-Policy", value: csp },
       { key: "X-Frame-Options", value: "SAMEORIGIN" },
       { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "X-XSS-Protection", value: "1; mode=block" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
       { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
     ];

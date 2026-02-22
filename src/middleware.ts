@@ -140,7 +140,11 @@ export async function middleware(request: NextRequest) {
 
     // Allow public paths without authentication
     if (PUBLIC_PATHS.has(pathname)) {
-      return NextResponse.next();
+      const response = NextResponse.next();
+      if (!isApiRoute) {
+        response.headers.set("Content-Security-Policy", buildCsp());
+      }
+      return response;
     }
 
     // Allow all non-admin API routes (contact forms, public data, etc.)
