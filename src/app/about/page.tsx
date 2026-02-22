@@ -10,6 +10,7 @@ const professionalLinks = [
   { href: "/faq", label: "שאלות נפוצות" },
 ];
 
+
 export default function AboutPage() {
   return (
     <section className="mx-auto w-full max-w-5xl px-6 py-16">
