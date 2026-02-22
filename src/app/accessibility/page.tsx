@@ -13,7 +13,7 @@ export default function AccessibilityPage() {
             </p>
             <h1 className="mt-2 text-3xl font-semibold text-slate-900">הצהרת נגישות</h1>
             <p className="mt-3 max-w-2xl text-sm text-slate-600">
-              אנג'לה טרויאנובסקי נדל"ן רואה חשיבות רבה בהנגשת האתר ומתן שירות שוויוני
+              אנג'לה טרויה נדל"ן רואה חשיבות רבה בהנגשת האתר ומתן שירות שוויוני
               לכלל הציבור, לרבות אנשים עם מוגבלות. בהתאם לכך, בוצעו התאמות נגישות
               באתר בהתאם להוראות הדין בישראל, לרבות תקנות שוויון זכויות לאנשים עם
               מוגבלות (התאמות נגישות לשירות), ובהתאם להנחיות התקן הישראלי ת"י 5568
@@ -59,7 +59,7 @@ export default function AccessibilityPage() {
             <h2 className="text-lg font-semibold text-slate-900">3. פנייה בנושא נגישות</h2>
             <p className="mt-2">לשאלות, בקשות או דיווח על בעיית נגישות, ניתן ליצור קשר:</p>
             <p className="mt-2">
-              שם איש קשר: אנג'לה טרויאנובסקי
+              שם איש קשר: אנג'לה טרויה
               <br />
               דוא"ל: anjelatroyarealestate@gmail.com
               <br />
