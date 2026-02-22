@@ -21,11 +21,11 @@ const siteUrl = getSiteUrl() || "https://anjelatroya.co.il";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "ANJELA TROYA | נדל\"ן ושמאות",
-  description: "שירותי תיווך ושמאות נדל\"ן מקצועיים בישראל.",
+  title: "ANJELA TROYA | תיווך נדל\"ן באשקלון",
+  description: "שירותי תיווך נדל\"ן מקצועיים באשקלון — ליווי אישי, אמינות ושקיפות מלאה.",
   openGraph: {
-    title: "ANJELA TROYA | נדל\"ן ושמאות",
-    description: "שירותי תיווך ושמאות נדל\"ן מקצועיים בישראל.",
+    title: "ANJELA TROYA | תיווך נדל\"ן באשקלון",
+    description: "שירותי תיווך נדל\"ן מקצועיים באשקלון — ליווי אישי, אמינות ושקיפות מלאה.",
     type: "website",
     url: siteUrl,
   },

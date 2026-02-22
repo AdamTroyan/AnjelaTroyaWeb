@@ -73,7 +73,7 @@ export default function AppChrome({ isAdmin, children }: AppChromeProps) {
               ANJELA TROYA
             </span>
             <span className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">
-              תיווך נדל&quot;ן | שמאות | ייעוץ אישי
+              תיווך נדל&quot;ן | אשקלון
             </span>
           </Link>
           {/* Action buttons */}
@@ -171,7 +171,7 @@ export default function AppChrome({ isAdmin, children }: AppChromeProps) {
       </a>
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-2 px-6 py-6 text-center text-sm text-slate-500">
-          <p>ANJELA TROYA - נדל&quot;ן ושמאות</p>
+          <p>ANJELA TROYA - תיווך נדל&quot;ן באשקלון</p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-slate-500">
             <Link className="transition hover:text-slate-700" href="/terms">
               תנאי שימוש

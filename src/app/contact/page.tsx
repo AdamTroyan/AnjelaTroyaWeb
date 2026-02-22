@@ -43,7 +43,7 @@ export default async function ContactPage() {
         <div className="rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
           <h1 className="text-3xl font-semibold text-slate-900">צור קשר</h1>
           <p className="mt-4 text-base text-slate-600">
-            לתיאום פגישה או קבלת הערכת שווי, ניתן להשאיר פרטים ונחזור אליך בהקדם.
+            רוצים לשמוע עוד, לתאם סיור או לקבל הערכת שווי? השאירו פרטים ואחזור אליכם בהקדם.
           </p>
           <div className="mt-6 space-y-3 text-sm text-slate-600">
             <p>טלפון: 054-317-9762</p>
@@ -53,7 +53,7 @@ export default async function ContactPage() {
         </div>
         <ContactWhatsApp
           title="שליחת הודעה ב-WhatsApp"
-          body="בלחיצת כפתור תפתח שיחה עם אנג'לה ב-WhatsApp"
+          body="כפתור אחד ואתם ישירות אצלי ב-WhatsApp"
           buttonLabel="פתיחת WhatsApp"
         />
       </div>

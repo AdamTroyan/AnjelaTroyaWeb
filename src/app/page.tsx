@@ -109,15 +109,16 @@ export default async function Home() {
       />
       <section className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">תיווך ושמאות נדל&quot;ן</p>
+          <p className="text-sm font-semibold text-slate-500">תיווך נדל&quot;ן באשקלון</p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight text-slate-900">
-            מי אני ומה החזון שלי
+            אנג&#39;לה טרויה — תיווך נדל&quot;ן עם לב
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-            אני אנג׳לה טרויה, מתווכת ושמאית נדל&quot;ן באשקלון. החזון שלי הוא שכל אדם
-            שרוצה להשכיר או למכור דירה יקבל שירות מקצועי, קשוב ושקוף, שמוביל
-            לקבלת החלטות בטוחות ולתוצאה הטובה ביותר עבורו. אני מלווה לקוחות מכל
-            הקהלים, עם דגש על שירות מלא לדוברי רוסית בשפתם.
+            אני אנג&#39;לה טרויה, מתווכת נדל&quot;ן באשקלון כבר 5 שנים. חיה
+            באשקלון מעל 30 שנה, מכירה כל רחוב ושכונה. אני מאמינה שכל אדם
+            מגיע לשירות מקצועי, אמין ושקוף — ועובדת מכל הלב כדי שהלקוחות
+            שלי ירגישו בטוחים ויצאו מרוצים. עובדת עם דוברי רוסית בשפתם
+            ועם כל קהל — הדלת פתוחה לכולם.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a
@@ -143,23 +144,25 @@ export default async function Home() {
 
         <div className="grid gap-6 rounded-3xl border border-slate-200 bg-white p-10 shadow-sm lg:grid-cols-3">
           <div>
-            <h2 className="text-2xl font-semibold text-slate-900">אודות</h2>
+            <h2 className="text-2xl font-semibold text-slate-900">למה לעבוד איתי?</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">
-              שילוב בין מקצועיות שמאית לשירות אישי מאפשר לי ללוות בעלי נכסים
-              באשקלון בתהליך מסודר, רגוע ומדויק, עם זמינות גבוהה ותקשורת בשפת
-              הלקוח.
+              אני מלווה את הלקוחות שלי מהרגע הראשון ועד לרגע האחרון. מעורבת
+              בכל פרט, זמינה בכל שלב, ופועלת בשקיפות מלאה כדי שתרגישו
+              בטוחים בכל החלטה.
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-            <h3 className="text-lg font-semibold text-slate-900">דיוק מקצועי</h3>
+            <h3 className="text-lg font-semibold text-slate-900">קשר אישי</h3>
             <p className="mt-2 text-sm text-slate-600">
-              הערכות שווי מפורטות ותכנון מסלול פעולה לפי מטרות הלקוח.
+              אני לא רק מתווכת — אני שם בשבילכם. זמינות מלאה, תקשורת ישירה
+              והקשבה אמיתית לצרכים שלכם.
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-            <h3 className="text-lg font-semibold text-slate-900">ליווי אישי</h3>
+            <h3 className="text-lg font-semibold text-slate-900">מקצועיות ואמינות</h3>
             <p className="mt-2 text-sm text-slate-600">
-              זמינות גבוהה, תקשורת רציפה ותיאום מלא עד החתימה.
+              ניסיון של 5 שנים בשוק האשקלוני, היכרות עמוקה עם הנכסים
+              ותמחור מדויק שמביא תוצאות.
             </p>
           </div>
         </div>
