@@ -162,7 +162,7 @@ export default function AppChrome({ isAdmin, children }: AppChromeProps) {
       </main>
       <a
         className="fixed bottom-5 left-5 z-50 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-700"
-        href="https://wa.me/972543179762"
+        href="https://wa.me/972547650236"
         target="_blank"
         rel="noreferrer"
         aria-label="פתיחת שיחה ב-WhatsApp"

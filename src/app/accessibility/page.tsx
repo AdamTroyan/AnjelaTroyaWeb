@@ -61,7 +61,7 @@ export default function AccessibilityPage() {
             <p className="mt-2">
               שם איש קשר: אנג'לה טרויאנובסקי
               <br />
-              דוא"ל: adamulyalox@gmail.com
+              דוא"ל: anjelatroyarealestate@gmail.com
               <br />
               טלפון: 054-765-0236
             </p>

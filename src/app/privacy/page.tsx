@@ -109,7 +109,7 @@ export default function PrivacyPage() {
               משתמש רשאי לעיין במידע, לתקנו או לבקש את מחיקתו.
             </p>
             <p className="mt-2">
-              פניות ניתן לשלוח ל: adamulyalox@gmail.com
+              פניות ניתן לשלוח ל: anjelatroyarealestate@gmail.com
             </p>
             <p className="mt-2">ייתכן ונבקש פרטי אימות לצורך זיהוי.</p>
           </div>
@@ -135,7 +135,7 @@ export default function PrivacyPage() {
               <br />
               המשרד אינו מקבל קהל בכתובת קבועה
               <br />
-              דוא&quot;ל: adamulyalox@gmail.com
+              דוא&quot;ל: anjelatroyarealestate@gmail.com
             </p>
           </div>
         </div>

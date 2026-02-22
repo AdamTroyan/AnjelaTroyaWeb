@@ -59,7 +59,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
   });
 
   const whatsappMessage = `שלום, אשמח לקבל פרטים לגבי הנכס: ${property.title}`;
-  const whatsappUrl = `https://wa.me/972543179762?text=${encodeURIComponent(
+  const whatsappUrl = `https://wa.me/972547650236?text=${encodeURIComponent(
     whatsappMessage
   )}`;
 
@@ -203,10 +203,10 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
             </p>
             <div className="mt-4 space-y-2 text-sm text-slate-600">
               <p>
-                טלפון: <a className="font-semibold text-slate-800" href="tel:+972543179762">054-317-9762</a>
+                טלפון: <a className="font-semibold text-slate-800" href="tel:+972547650236">054-765-0236</a>
               </p>
               <p>
-                אימייל: <a className="font-semibold text-slate-800" href="mailto:adamtroy@gmail.com">adamtroy@gmail.com</a>
+                אימייל: <a className="font-semibold text-slate-800" href="mailto:anjelatroyarealestate@gmail.com">anjelatroyarealestate@gmail.com</a>
               </p>
             </div>
             <a

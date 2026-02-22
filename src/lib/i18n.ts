@@ -119,8 +119,8 @@ const translations: Record<Locale, TranslationObject> = {
     contact: {
       title: "צור קשר",
       body: "לתיאום פגישה או קבלת הערכת שווי, ניתן להשאיר פרטים ונחזור אליך בהקדם.",
-      phone: "טלפון: 054-317-9762",
-      email: "אימייל: adamtroy@gmail.com",
+      phone: "טלפון: 054-765-0236",
+      email: "אימייל: anjelatroyarealestate@gmail.com",
       area: "מיקום פעילות: מרכז הארץ, ירושלים והשרון",
       whatsappTitle: "שליחת הודעה ב-WhatsApp",
       whatsappBody: "בלחיצת  כפתור תפתח שיחה עם אנג'לה ב-WhatsApp",
@@ -460,8 +460,8 @@ const translations: Record<Locale, TranslationObject> = {
     contact: {
       title: "Связаться",
       body: "Чтобы договориться о встрече или получить оценку, оставьте данные — мы свяжемся в ближайшее время.",
-      phone: "Телефон: 054-317-9762",
-      email: "Email: adamtroy@gmail.com",
+      phone: "Телефон: 054-765-0236",
+      email: "Email: anjelatroyarealestate@gmail.com",
       area: "Зона работы: центр страны, Иерусалим и Шарон",
       whatsappTitle: "Отправить сообщение в WhatsApp",
       whatsappBody: "Нажмите кнопку — откроется чат с Анжелой в WhatsApp",

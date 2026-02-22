@@ -46,8 +46,8 @@ export default async function ContactPage() {
             רוצים לשמוע עוד, לתאם סיור או לקבל הערכת שווי? השאירו פרטים ואחזור אליכם בהקדם.
           </p>
           <div className="mt-6 space-y-3 text-sm text-slate-600">
-            <p>טלפון: 054-317-9762</p>
-            <p>אימייל: adamtroy@gmail.com</p>
+            <p>טלפון: 054-765-0236</p>
+            <p>אימייל: anjelatroyarealestate@gmail.com</p>
             <p>מיקום פעילות: אשקלון</p>
           </div>
         </div>

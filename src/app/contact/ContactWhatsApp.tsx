@@ -1,6 +1,6 @@
 "use client";
 
-const WHATSAPP_NUMBER = "972543179762";
+const WHATSAPP_NUMBER = "972547650236";
 const WHATSAPP_MESSAGE = "שלום, הגעתי אלייך דרך האתר שלך, אני רוצה לברר לגבי קנייה/השכרה";
 
 type ContactWhatsAppProps = {

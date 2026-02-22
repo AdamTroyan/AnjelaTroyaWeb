@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import TurnstileWidget from "@/components/TurnstileWidget";
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "972543179762";
-const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || "+972543179762";
-const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "adamtroy@gmail.com";
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "972547650236";
+const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || "+972547650236";
+const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "anjelatroyarealestate@gmail.com";
 
 type DealType = "SALE" | "RENT";
 

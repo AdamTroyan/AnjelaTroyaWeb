@@ -91,8 +91,8 @@ export default async function Home() {
     "@type": "RealEstateAgent",
     name: "ANJELA TROYA",
     url: siteUrl,
-    telephone: "+972543179762",
-    email: "adamtroy@gmail.com",
+    telephone: "+972547650236",
+    email: "anjelatroyarealestate@gmail.com",
     areaServed: "Ashkelon",
     address: {
       "@type": "PostalAddress",
@@ -348,8 +348,8 @@ export default async function Home() {
                 ונחזור אליך במהירות.
               </p>
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-600">
-                <span>טלפון: 054-317-9762</span>
-                <span>אימייל: adamtroy@gmail.com</span>
+                <span>טלפון: 054-765-0236</span>
+                <span>אימייל: anjelatroyarealestate@gmail.com</span>
               </div>
               <a
                 className="mt-6 inline-block rounded-md bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
@@ -367,8 +367,8 @@ export default async function Home() {
               ונחזור אליך במהירות.
             </p>
             <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-600">
-              <span>טלפון: 054-317-9762</span>
-              <span>אימייל: adamtroy@gmail.com</span>
+              <span>טלפון: 054-765-0236</span>
+              <span>אימייל: anjelatroyarealestate@gmail.com</span>
             </div>
             <a
               className="mt-6 inline-block rounded-md bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"

@@ -187,7 +187,7 @@ export default function TermsPage() {
             <p className="mt-2">
               שם איש קשר: אנג'לה טרויאנובסקי
               <br />
-              דוא"ל: adamulyalox@gmail.com
+              דוא"ל: anjelatroyarealestate@gmail.com
             </p>
             <p className="mt-2">בעת הפנייה מומלץ לציין:</p>
             <p className="mt-2">תיאור הבעיה</p>
