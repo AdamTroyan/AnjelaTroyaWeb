@@ -65,25 +65,30 @@ export default function AppChrome({ isAdmin, children }: AppChromeProps) {
         מעבר לתוכן המרכזי
       </a>
       <header className="border-b border-slate-200 bg-gradient-to-b from-white via-white/95 to-slate-50/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
-          <div className="flex flex-col gap-1">
-            <span className="font-display text-2xl font-semibold tracking-[0.08em] text-slate-900">
+        {/* ── Top bar: Logo + actions ── */}
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5 md:py-5">
+          {/* Logo — stacked on mobile, inline on desktop */}
+          <Link href="/" className="flex flex-col gap-0.5 min-w-0">
+            <span className="font-display text-lg font-semibold tracking-[0.08em] text-slate-900 md:text-2xl">
               ANJELA TROYA
             </span>
-            <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
+            <span className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">
               תיווך נדל&quot;ן | שמאות | ייעוץ אישי
             </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <HeaderAuth isAdmin={isAdmin} />
+          </Link>
+          {/* Action buttons */}
+          <div className="flex shrink-0 items-center gap-2 md:gap-3">
+            <div className="hidden md:flex md:items-center md:gap-2">
+              <HeaderAuth isAdmin={isAdmin} />
+            </div>
             <Link
-              className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-800"
+              className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-800 md:px-4 md:py-2 md:text-xs"
               href="/contact"
             >
               צור קשר
             </Link>
             <button
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:text-slate-900 md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition hover:border-slate-300 hover:text-slate-900 md:hidden"
               type="button"
               aria-label={mobileOpen ? "סגירת תפריט" : "פתיחת תפריט"}
               aria-expanded={mobileOpen}
@@ -116,32 +121,33 @@ export default function AppChrome({ isAdmin, children }: AppChromeProps) {
         </div>
         {mobileOpen ? (
           <div className="md:hidden" onClick={() => setMobileOpen(false)}>
-            <div className="fixed inset-0 z-40 bg-slate-900/20" />
+            <div className="fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm" />
             <div
-              className="absolute left-0 right-0 top-full z-50 border-t border-slate-100 bg-white shadow-lg"
+              className="absolute left-0 right-0 top-full z-50 max-h-[75dvh] overflow-y-auto border-t border-slate-100 bg-white shadow-xl"
               onClick={(event) => event.stopPropagation()}
             >
-              <nav className="mx-auto grid max-w-6xl gap-1 px-6 py-4 text-sm font-semibold text-slate-700">
+              <nav className="mx-auto grid max-w-6xl gap-0.5 px-5 py-3 text-[13px] font-semibold text-slate-700">
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
-                    className={`rounded-xl px-3 py-2 transition hover:bg-slate-50 ${
+                    className={`flex items-center gap-2 rounded-xl px-3 py-2.5 transition active:scale-[0.98] hover:bg-slate-50 ${
                       isActive(item.href) ? "bg-slate-50 text-slate-900" : ""
                     }`}
                     href={item.href}
                     aria-current={isActive(item.href) ? "page" : undefined}
                   >
+                    {isActive(item.href) && (
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-900" />
+                    )}
                     {item.label}
                   </Link>
                 ))}
+                <hr className="my-1 border-slate-100" />
+                <div className="flex items-center gap-2 px-3 py-2">
+                  <HeaderAuth isAdmin={isAdmin} />
+                </div>
                 <Link
-                  className="rounded-xl px-3 py-2 transition hover:bg-slate-50"
-                  href={isAdmin ? "/admin/dashboard" : "/admin"}
-                >
-                  {isAdmin ? "דשבורד" : "התחברות"}
-                </Link>
-                <Link
-                  className="rounded-xl bg-slate-900 px-3 py-2 text-center text-sm font-semibold text-white"
+                  className="rounded-xl bg-slate-900 px-3 py-2.5 text-center text-[13px] font-semibold text-white active:scale-[0.98]"
                   href="/contact"
                 >
                   צור קשר
